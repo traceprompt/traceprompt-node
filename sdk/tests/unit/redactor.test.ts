@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { redact } from "../../src/redactor";
+import { redact } from "../../src/utils/redactor";
 
 describe("redactor.ts", () => {
   describe("redact function", () => {

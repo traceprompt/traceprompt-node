@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
-import type { LogEntry } from "../../src/types";
+import type { LogEntry } from "../../src/utils/types";
 
 describe("buffer.ts", () => {
   let tempWalPath = path.join(process.cwd(), "temp-test-wal.json");

@@ -5,11 +5,11 @@
 import { Worker } from "node:worker_threads";
 import path from "node:path";
 
-import { initSettings, settings, state } from "./state";
-import { enqueue, startFlusher, replayWal } from "./buffer";
-import { redact } from "./redactor";
-import { link } from "./hash";
-import type { InitOptions, JSONValue } from "./types";
+import { initSettings, settings, state } from "./utils/state";
+import { enqueue, startFlusher, replayWal } from "./utils/buffer";
+import { redact } from "./utils/redactor";
+import { link } from "./utils/hash";
+import type { InitOptions, JSONValue } from "./utils/types";
 
 /* ---------- 1. Initialise SDK ------------------------------------ */
 

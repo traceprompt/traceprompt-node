@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("../../src/state", async () => {
-  const actual = await vi.importActual("../../src/state");
+vi.mock("../../src/utils/state", async () => {
+  const actual = await vi.importActual("../../src/utils/state");
   const settings = {
     apiKey: "test-api-key",
     batchSize: 5,
@@ -22,7 +22,7 @@ vi.mock("../../src/state", async () => {
   };
 });
 
-import { canonicalJSON, digest, link } from "../../src/hash";
+import { canonicalJSON, digest, link } from "../../src/utils/hash";
 
 describe("hash.ts", () => {
   describe("canonicalJSON", () => {
@@ -63,7 +63,7 @@ describe("hash.ts", () => {
       const hash2 = digest(payload);
 
       expect(hash1).toBe(hash2);
-      expect(hash1.length).toBe(64); 
+      expect(hash1.length).toBe(64);
     });
 
     it("should generate different hashes for different inputs", () => {
@@ -74,7 +74,7 @@ describe("hash.ts", () => {
     });
 
     it("should use the configured hash algorithm", async () => {
-      const { initSettings } = await import("../../src/state");
+      const { initSettings } = await import("../../src/utils/state");
 
       // Get BLAKE3 hash
       initSettings({ apiKey: "test-api-key", hashAlgo: "blake3" });

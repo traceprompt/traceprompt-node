@@ -12,13 +12,13 @@
   },
   "files": [
     "src/index.ts",
-    "src/state.ts",
-    "src/buffer.ts",
-    "src/redactor.ts",
-    "src/hash.ts",
-    "src/types.ts",
-    "src/otel.ts",
-    "src/flush-worker.ts"
+    "src/utils/state.ts",
+    "src/utils/buffer.ts",
+    "src/utils/redactor.ts",
+    "src/utils/hash.ts",
+    "src/utils/types.ts",
+    "src/utils/otel.ts",
+    "src/utils/flush-worker.ts"
   ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

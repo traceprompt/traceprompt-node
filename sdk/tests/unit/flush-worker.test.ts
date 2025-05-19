@@ -1,14 +1,12 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import http from "node:http";
 import { AddressInfo } from "node:net";
-import type { BatchPayload, LogEntry } from "../../src/types";
+import type { BatchPayload, LogEntry } from "../../src/utils/types";
 import axios from "axios";
 
-// Define types for the worker mock
 type EventName = "message" | "error" | "exit" | "online";
 type EventHandler = (...args: any[]) => void;
 
-// Mock the worker thread behavior instead of trying to load the actual worker
 vi.mock("node:worker_threads", () => {
   return {
     Worker: vi
