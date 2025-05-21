@@ -1,6 +1,6 @@
 {
   "name": "@traceprompt/sdk",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Traceprompt SDK for tamper-proof AI logs for audit & compliance.",
   "keywords": [
     "ai",
@@ -14,23 +14,28 @@
     "annex-iv"
   ],
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist/**/*"
   ],
   "scripts": {
-    "build": "tsup",
-    "build:types": "tsc",
+    "build": "rm -rf dist && tsup",
     "test": "vitest run",
     "test:jest": "jest",
     "test:coverage": "vitest run --coverage",
     "dev": "tsc --watch",
+    "watch": "tsup --watch",
+    "link": "yarn link",
+    "dev:test": "yarn build && yarn link && yarn watch",
     "publish-sdk": "yarn build && yarn test && npm publish --access public"
   },
   "dependencies": {
     "@napi-rs/blake-hash": "^1.3.4",
     "@opentelemetry/api": "^1.9.0",
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "openai": "^4.100.0",
+    "zod": "^3.25.9"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",
