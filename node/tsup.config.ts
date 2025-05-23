@@ -7,4 +7,8 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
+  minify: false,
+  treeshake: true,
+  target: "node18",
+  outDir: "dist",
 });

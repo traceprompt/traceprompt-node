@@ -1,25 +1,38 @@
 /**
  * crypto/encryptor.ts
- * --------------------
- * Envelope AES-256-GCM using AWS Encryption SDK v4.
- *  • encryptBuffer → EncryptedBundle
- *  • decryptBundle → Buffer         (for UI / tests only)
+ * ------------------------------------------------------
+ * Wrapper around AWS Encryption SDK v4 for envelope
+ * encryption.  Keeps the public API minimal:
+ *
+ *   • encryptBuffer(plain)  → EncryptedBundle
+ *   • decryptBundle(bundle) → Buffer
+ *
+ * decryptBundle is exported for customer-side UI or unit
+ * tests—**never** call it inside the ingest path.
+ * ------------------------------------------------------
  */
 
 import { buildClient, CommitmentPolicy } from "@aws-crypto/client-node";
+
 import { buildKeyring } from "../keyring";
 import { EncryptedBundle } from "../types";
 
-/* One global client bound to the strictest policy */
+/* One shared client instance bound to strict policy. */
 const { encrypt, decrypt } = buildClient(
   CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
 );
 
-/* ---------- Encrypt ---------- */
+/* ---------- Encrypt ------------------------------------------------ */
+
+/**
+ * Encrypt a Buffer with a fresh data-key wrapped by the
+ * customer’s CMK (or local-dev raw keyring).
+ *
+ * @returns   base64 fields safe for JSON transport.
+ */
 export async function encryptBuffer(plain: Buffer): Promise<EncryptedBundle> {
   const keyring = buildKeyring();
 
-  /* encryptionContext optional; omit for size */
   const { result, messageHeader } = await encrypt(keyring, plain);
 
   return {
@@ -27,11 +40,16 @@ export async function encryptBuffer(plain: Buffer): Promise<EncryptedBundle> {
     encryptedDataKey: Buffer.from(
       messageHeader.encryptedDataKeys[0].encryptedDataKey
     ).toString("base64"),
-    algoSuiteId: messageHeader.suiteId,
+    suiteId: messageHeader.suiteId, // optional diagnostics
   };
 }
 
-/* ---------- Decrypt (client-side) ---------- */
+/* ---------- Decrypt (UI / tests) ---------------------------------- */
+
+/**
+ * Decrypt an EncryptedBundle back to plaintext.
+ * Requires keyring with decrypt privilege (customer side).
+ */
 export async function decryptBundle(bundle: EncryptedBundle): Promise<Buffer> {
   const keyring = buildKeyring();
 

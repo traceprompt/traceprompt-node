@@ -1,5 +1,24 @@
-tenantId: tnt_abc123
-cmkArn: local-dev
+# TracePrompt SDK – example runtime configuration file
+# ----------------------------------------------------
+# Copy to `.tracepromptrc.yml` and adjust for each environment.
+#
+# Values can be overridden at runtime by environment variables:
+#   TRACEPROMPT_TENANT_ID        → tenantId
+#   TP_CMK_ARN                   → cmkArn
+#   TRACEPROMPT_INGEST_URL       → ingestUrl
+#
+# Or programmatically by passing an object to initTracePrompt().
+# ----------------------------------------------------
+
+tenantId: tnt_yourTenantIdHere # UUID or human-readable slug
+cmkArn: arn:aws:kms:eu-west-2:123456789012:key/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ingestUrl: https://api.traceprompt.dev/v1/ingest
-batchSize: 25
-flushIntervalMs: 2000
+
+# Optional performance knobs
+batchSize: 25 # flush after N records (default 25)
+flushIntervalMs: 2000 # flush every N ms regardless of batch size (default 2000)
+
+# Static metadata automatically attached to every event
+staticMeta:
+  env: "dev" # any key/value pairs (e.g., env, app, region)
+  app: "my-llm-service"

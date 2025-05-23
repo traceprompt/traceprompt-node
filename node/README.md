@@ -1,141 +1,115 @@
-# Traceprompt SDK · Tamper-Proof AI Logging for audit & compliance.
+### `README.md`
 
-![npm](https://img.shields.io/npm/v/@traceprompt/sdk?color=blue)
-![license](https://img.shields.io/npm/l/mit)
-![build](https://github.com/traceprompt/sdk/actions/workflows/ci.yml/badge.svg)
+# traceprompt SDK for Node.js
 
-Hash, mask and anchor every AI prompt & response in **\< 1 ms**. Pass banking, healthcare & global AI audits with zero extra infra.
+**Audit-ready, tamper-evident logging for every LLM prompt/response.**  
+Two lines of code wrap your `openai`, `anthropic`, `groq` (or any HTTP-based) client and stream encrypted, hash-chained events to an immutable ledger—ready for FINRA, HIPAA §164.312(b), and EU AI Act audits.
 
 ---
 
-## Features
-
-| Feature                        | Description                                                   |
-| ------------------------------ | ------------------------------------------------------------- |
-| **Cryptographic immutability** | BLAKE3/SHA-256 hash-chain + hourly Merkle checkpoints         |
-| **In-process PII redaction**   | Ultra-fast regex (default) or opt-in smart NER                |
-| **< 0.3 ms overhead**          | Streaming hashing + lock-free buffer, network I/O off-thread  |
-| **Batch flush & WAL**          | No drops on crash; replay on start                            |
-| **OpenTelemetry attrs**        | `traceprompt.hash`, `traceprompt.latency_ms`                  |
-| **Compatible ingest**          | POSTs to `/logs` endpoint (Fastify sample) or immudb side-car |
+## ✨ Features
+* **Client-side AES-256-GCM** encryption with **customer-managed KMS keys** – traceprompt never sees clear-text.
+* **BLAKE3 hash-chain + hourly Merkle root anchoring** (OpenTimestamps by default).
+* **Automatic token counting** and latency metrics.
+* **Batcher** with back-off retries; < 2 ms median overhead.
+* **Prometheus hooks** out-of-the-box.
+* Works anywhere Node 18 + runs—Fargate, Vercel, Lambdas, k8s.
 
 ---
 
 ## Quick start
 
 ```bash
-npm i @traceprompt/sdk openai   # or any LLM client
-```
+npm i @traceprompt/node
+# or yarn add @traceprompt/node
+````
 
 ```ts
-import { init, wrap } from "@traceprompt/sdk";
-import OpenAI from "openai";
+import { initTracePrompt, wrapLLM } from '@traceprompt/node'
+import OpenAI from 'openai'
 
-init({
-  // one-time bootstrap
-  apiKey: process.env.TRACEPROMPT_API_KEY!,
-  /* optional */
-  piiRedact: "regex", // 'regex' | 'smart' | 'off'
-  batchSize: 100,
-  flushIntervalMs: 50,
-});
+initTracePrompt({
+  tenantId:  'tnt_abc123',
+  cmkArn:    process.env.TP_CMK_ARN!,           // AWS KMS CMK ARN
+  ingestUrl: 'https://api.traceprompt.dev/v1/ingest'
+})
 
-const openai = wrap(OpenAI); // drop-in replacement
+const openai = new OpenAI()
+const safeChat = wrapLLM(openai.chat.completions.create, {
+  modelVendor: 'openai',
+  modelName:   'gpt-4o',
+  userId:      'alice'
+})
 
-/* normal usage */
-const res = await openai.chat.completions.create({
-  model: "gpt-4o",
-  messages: [{ role: "user", content: "Email john.doe@example.com results." }],
-});
-console.log(res.choices[0].message.content);
+const reply = await safeChat('Hello, world!')
+console.log(reply.choices[0].message.content)
 ```
 
-_Every prompt & response is now redacted, hashed, linked, queued, and flushed to your ingest API — caller overhead ≈ 0.25 ms._
+---
+
+## Configuration
+
+| Key               | Description                            | Source (priority)                                         |
+| ----------------- | -------------------------------------- | --------------------------------------------------------- |
+| `tenantId`        | Unique tenant / customer ID.           | code ➔ env `TRACEPROMPT_TENANT_ID` ➔ `.tracepromptrc.yml` |
+| `cmkArn`          | AWS KMS CMK ARN (or `"local-dev"`).    | code ➔ env `TP_CMK_ARN` ➔ rc file                         |
+| `ingestUrl`       | HTTPS endpoint for batch ingest.       | code ➔ env `TRACEPROMPT_INGEST_URL` ➔ rc                  |
+| `batchSize`       | Flush queue at N records (default 25). | same hierarchy                                            |
+| `flushIntervalMs` | Flush every N ms (default 2000).       | same hierarchy                                            |
+
+Local-dev mode
+
+```bash
+export TP_CMK_ARN=local-dev
+export LOCAL_DEV_KEK=$(openssl rand -hex 32)   # 32-byte hex key
+```
 
 ---
 
-## ⚙️ Configuration
+## Metrics
 
-| Key               | Default                | Notes                                         |
-| ----------------- | ---------------------- | --------------------------------------------- |
-| `apiKey`          | **required**           | SaaS / ingest authentication                  |
-| `piiRedact`       | `'regex'`              | `'smart'` uses spaCy-wasm (≈3 ms)             |
-| `batchSize`       | `100`                  | Ring-buffer length & POST batch size          |
-| `flushIntervalMs` | `50`                   | Worker wakes every N ms                       |
-| `hashAlgo`        | `'blake3'`             | Or `'sha256'` (FIPS)                          |
-| `walPath`         | `/tmp/traceprompt.wal` | Disable with `false`                          |
-| `tls.mtls`        | `false`                | Enable + provide `cert`/`key` for client-auth |
+| Metric                             | Type      | What it tells you               |
+| ---------------------------------- | --------- | ------------------------------- |
+| `traceprompt_encrypt_ms`           | Histogram | Client-side encryption latency. |
+| `traceprompt_flush_failures_total` | Counter   | Failed batch POSTs.             |
+| `traceprompt_queue_depth`          | Gauge     | Current in-memory queue size.   |
 
----
-
-## Advanced
-
-### Attach custom metadata
+Expose via:
 
 ```ts
-import { enrich } from '@traceprompt/sdk';
-
-enrich({ userId:'u_123', session:'s_789' });
-await openai.chat.completions.create({...});
-```
-
-### OpenTelemetry linkage
-
-If your app is instrumented, the SDK adds span attributes automatically:
-
-```shell
-traceprompt.hash      = 5f2e70...b8c9
-traceprompt.latency_ms= 703
-```
-
-### Smart NER redaction
-
-Install extras only if you need name/org masking:
-
-```bash
-npm i @spacy/wasm-node @spacy/ner-utils
-Traceprompt.init({ piiRedact:'smart' });
-```
-
----
-
-## Ingest & storage reference (AWS)
-
-```
-Client pod
- └─> /logs  (Fastify gRPC/HTTP, mTLS) ──► immudb STS  ──► S3 Object Lock
-                          │
-                          └─ anchor-service (CronJob) → Bitcoin / Git tag
-```
-
-Sample Helm charts & Terraform modules live in `/infra`.
-
----
-
-## Development
-
-```bash
-pnpm i
-pnpm run test           # Jest + ts-jest
-pnpm run bench          # k6 perf harness (<0.3 ms p95)
-pnpm run dev            # ts-node watch
+import { registry } from '@traceprompt/node/dist/metrics'
+app.get('/metrics', (_, res) => res.end(registry.metrics()))
 ```
 
 ---
 
 ## FAQ
 
-- **Does this slow down my LLM calls?**
-  Regex path adds < 0.3 ms p95; smart NER adds \~3 ms.
+### Does traceprompt store my data?
 
-- **Can I run everything on-prem?**
-  Yes — deploy the Fastify ingest & immudb side-car inside your cluster; nothing leaves.
+No. The SDK encrypts prompt + response **before** they leave your process, using **your** KMS key. TracePrompt’s ingest service sees only ciphertext.
 
-- **What happens if the process crashes?**
-  Entries spill to a write-ahead log; on boot `replayWal()` re-queues them before new traffic flows.
+### How much latency does it add?
+
+\~0.8 ms encryption + 0.05 ms hashing on a modern CPU; network flush is asynchronous.
+
+### Can I self-host?
+
+Yes—point `ingestUrl` at your own deployment. The ingest service (Go binary + Prisma schema) is OSS under `server/`.
+
+### What about PII masking?
+
+Client-side masking pipeline (regex/FPE sync + optional async NER) ships in `@traceprompt/mask` add-on.
 
 ---
 
-## License
+## Contributing
 
-MIT © Traceprompt
+```bash
+git clone https://github.com/traceprompt/sdk-node.git
+pnpm install
+pnpm test        # runs uvu tests
+pnpm build
+```
+
+PRs & issues welcome!

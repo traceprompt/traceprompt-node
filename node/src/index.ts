@@ -1,16 +1,27 @@
 /**
- * index.ts  (public surface)
- * ---------------------------------
- * Re-exports the two calls your users
- * will actually import:
+ * Public API entry-point for the TracePrompt SDK
+ * ---------------------------------------------
+ * Typical consumer usage:
  *
- *   import { initTracePrompt, wrapLLM }
- *            from '@traceprompt/node'
- * ---------------------------------
+ *   import { initTracePrompt, wrapLLM } from '@traceprompt/node'
+ *
+ *   initTracePrompt({
+ *     tenantId: 'tnt_X',
+ *     apiKey: 'tp_your_api_key',
+ *     cmkArn: 'arn:…',
+ *     ingestUrl: 'https://…'
+ *   })
+ *
+ *   const safeChat = wrapLLM(openai.chat.completions.create, {
+ *     modelVendor: 'openai',
+ *     modelName: 'gpt-4o',
+ *     userId: 'user-123'
+ *   })
+ *
+ *   const answer = await safeChat('Hello world')
  */
 
-export { initTraceprompt, wrap } from "./wrapper";
+export { initTracePrompt, wrapLLM } from "./wrapper";
+export { decryptBundle } from "./crypto/encryptor";
 
-// Re-export typings so downstream code can
-// `import type { TracePromptInit } from ...`
-export type { TracePromptInit, WrapOpts } from "./types";
+export type { TracePromptInit, WrapOpts, EncryptedBundle } from "./types";

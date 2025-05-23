@@ -1,46 +1,57 @@
 /**
  * keyring/index.ts
- * --------------------------------------------------
- * Builds a keyring that the Encryption SDK will use
- * for envelope-encrypt / decrypt.
+ * ------------------------------------------------------
+ * Returns an AWS Encryption SDK keyring appropriate for
+ * the current execution context.
  *
- * • In production: returns a KmsKeyringNode pointing
- *   at the customer’s CMK (ARN).
- * • In local-dev: returns a RawAesKeyringNode that
- *   wraps data-keys with a 256-bit hex key read from
- *   LOCAL_DEV_KEK.
- * --------------------------------------------------
+ * • Production  → KmsKeyringNode wrapping the customer's CMK.
+ * • Local dev   → RawAesKeyringNode using LOCAL_DEV_KEK.
+ *
+ * The keyring is constructed on every call so long-running
+ * processes can pick up CMK rotation without restart.
+ * ------------------------------------------------------
  */
 
 import {
-  AlgorithmSuiteIdentifier,
   KmsKeyringNode,
   RawAesKeyringNode,
+  RawAesWrappingSuiteIdentifier,
 } from "@aws-crypto/client-node";
 import { ConfigManager } from "../config";
 
 export type AnyKeyring = KmsKeyringNode | RawAesKeyringNode;
 
+/**
+ * Build a keyring based on the resolved configuration.
+ * Throws if prerequisites (e.g. LOCAL_DEV_KEK) are missing.
+ */
 export function buildKeyring(): AnyKeyring {
   const { cmkArn } = ConfigManager.cfg;
 
-  /* ---------- Local-dev path ---------- */
+  /* ---------- Local-dev path ----------------------------------- */
   if (cmkArn === "local-dev") {
-    const hex = process.env.LOCAL_DEV_KEK;
+    const hex = process.env["LOCAL_DEV_KEK"];
     if (!hex || hex.length !== 64) {
       throw new Error(
-        'LOCAL_DEV_KEK (64-char hex) must be set when cmkArn="local-dev"'
+        'TracePrompt: LOCAL_DEV_KEK (64-char hex) must be set when cmkArn="local-dev"'
       );
     }
+
+    // Create a truly isolated buffer (not a slice of a larger buffer)
+    const sourceBuffer = Buffer.from(hex, "hex");
+    const keyBuffer = Buffer.alloc(sourceBuffer.length);
+    sourceBuffer.copy(keyBuffer);
+
     return new RawAesKeyringNode({
       keyName: "dev",
       keyNamespace: "traceprompt",
-      unencryptedMasterKey: Buffer.from(hex, "hex"),
-      wrappingSuite: AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16,
+      unencryptedMasterKey: keyBuffer,
+      wrappingSuite:
+        RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING,
     });
   }
 
-  /* ---------- AWS KMS path ---------- */
+  /* ---------- Production path (AWS KMS) ------------------------ */
   return new KmsKeyringNode({
     generatorKeyId: cmkArn,
   });

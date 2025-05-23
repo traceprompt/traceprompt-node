@@ -8,13 +8,18 @@
   ],
   "scripts": {
     "build": "yarn workspaces run build",
+    "build:watch": "yarn workspaces run build:watch",
     "test": "yarn workspaces run test",
     "dev": "yarn workspaces run dev",
-    "build:sdk": "yarn workspace @traceprompt/sdk build",
-    "test:sdk": "yarn workspace @traceprompt/sdk test",
-    "dev:sdk": "yarn workspace @traceprompt/sdk dev",
-    "publish:sdk": "yarn workspace @traceprompt/sdk publish-sdk",
-    "rebuild:sdk": "yarn build:sdk && cd ../test && yarn install --force"
+    "build:sdk": "yarn workspace @traceprompt/node build",
+    "test:sdk": "yarn workspace @traceprompt/node test",
+    "dev:sdk": "yarn workspace @traceprompt/node build:watch",
+    "publish:sdk": "yarn build:sdk && yarn workspace @traceprompt/node publish-sdk",
+    "rebuild:sdk": "yarn build:sdk && yarn install --force"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "typescript": "^5.0.0"
   },
   "engines": {
     "node": ">=16"
