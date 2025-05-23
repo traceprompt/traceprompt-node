@@ -1,5 +1,5 @@
 {
-  "name": "@traceprompt/sdk",
+  "name": "@traceprompt/node",
   "version": "0.0.4",
   "description": "Traceprompt SDK for tamper-proof AI logs for audit & compliance.",
   "keywords": [
@@ -31,10 +31,15 @@
     "publish-sdk": "yarn build && yarn test && npm publish --access public"
   },
   "dependencies": {
+    "@aws-crypto/client-node": "^4.2.1",
+    "@aws-sdk/client-kms": "^3.816.0",
     "@napi-rs/blake-hash": "^1.3.4",
     "@opentelemetry/api": "^1.9.0",
     "axios": "^1.6.0",
+    "blake3": "^3.0.0",
     "openai": "^4.100.0",
+    "undici": "^7.10.0",
+    "yaml": "^2.8.0",
     "zod": "^3.25.9"
   },
   "devDependencies": {

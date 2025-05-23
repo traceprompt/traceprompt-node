@@ -1,0 +1,5 @@
+tenantId: tnt_abc123
+cmkArn: local-dev
+ingestUrl: https://api.traceprompt.dev/v1/ingest
+batchSize: 25
+flushIntervalMs: 2000

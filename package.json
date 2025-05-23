@@ -2,7 +2,7 @@
   "name": "traceprompt",
   "private": true,
   "version": "0.0.1",
-  "description": "Tamper-proof AI logs, Annex IV-ready in one click",
+  "description": "Tamper-proof AI logs for audit and compliance.",
   "workspaces": [
     "*"
   ],
