@@ -1,34 +1,15 @@
 {
   "compilerOptions": {
-    /* === Projects & output === */
-    "rootDir": "src",
-    "outDir": "dist",
+    "target": "es2020",
+    "module": "commonjs",
     "declaration": true,
     "declarationMap": true,
-
-    /* === Language === */
-    "target": "es2022",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "lib": ["es2022", "dom"],
-
-    /* === Strictness === */
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "exactOptionalPropertyTypes": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-
-    /* === Lint-assist === */
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-
-    /* === Source-maps === */
     "sourceMap": true,
-    "inlineSources": false
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node"
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["dist", "tests"]
+  "exclude": ["**/node_modules", "**/dist"]
 }
