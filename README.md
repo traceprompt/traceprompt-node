@@ -1,4 +1,4 @@
-# TracepPrompt SDKs
+# Traceprompt SDKs
 
 Tamper-proof AI logs for audit and compliance. Multiple language SDKs for encrypting and tracking LLM prompts/responses.
 
