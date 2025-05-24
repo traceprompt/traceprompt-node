@@ -8,12 +8,13 @@ Two lines of code wrap your `openai`, `anthropic`, `groq` (or any HTTP-based) cl
 ---
 
 ## ✨ Features
-* **Client-side AES-256-GCM** encryption with **customer-managed KMS keys** – traceprompt never sees clear-text.
-* **BLAKE3 hash-chain + hourly Merkle root anchoring** (OpenTimestamps by default).
-* **Automatic token counting** and latency metrics.
-* **Batcher** with back-off retries; < 2 ms median overhead.
-* **Prometheus hooks** out-of-the-box.
-* Works anywhere Node 18 + runs—Fargate, Vercel, Lambdas, k8s.
+
+- **Client-side AES-256-GCM** encryption with **customer-managed KMS keys** – traceprompt never sees clear-text.
+- **BLAKE3 hash-chain + hourly Merkle root anchoring** (OpenTimestamps by default).
+- **Automatic token counting** and latency metrics.
+- **Batcher** with back-off retries; < 2 ms median overhead.
+- **Prometheus hooks** out-of-the-box.
+- Works anywhere Node 18 + runs—Fargate, Vercel, Lambdas, k8s.
 
 ---
 
@@ -22,27 +23,27 @@ Two lines of code wrap your `openai`, `anthropic`, `groq` (or any HTTP-based) cl
 ```bash
 npm i @traceprompt/node
 # or yarn add @traceprompt/node
-````
+```
 
 ```ts
-import { initTracePrompt, wrapLLM } from '@traceprompt/node'
-import OpenAI from 'openai'
+import { initTracePrompt, wrapLLM } from "@traceprompt/node";
+import OpenAI from "openai";
 
 initTracePrompt({
-  tenantId:  'tnt_abc123',
-  cmkArn:    process.env.TP_CMK_ARN!,           // AWS KMS CMK ARN
-  ingestUrl: 'https://api.traceprompt.dev/v1/ingest'
-})
+  tenantId: "tnt_abc123",
+  cmkArn: process.env.TP_CMK_ARN!, // AWS KMS CMK ARN
+  ingestUrl: "https://api.traceprompt.dev/v1/ingest",
+});
 
-const openai = new OpenAI()
+const openai = new OpenAI();
 const safeChat = wrapLLM(openai.chat.completions.create, {
-  modelVendor: 'openai',
-  modelName:   'gpt-4o',
-  userId:      'alice'
-})
+  modelVendor: "openai",
+  modelName: "gpt-4o",
+  userId: "alice",
+});
 
-const reply = await safeChat('Hello, world!')
-console.log(reply.choices[0].message.content)
+const reply = await safeChat("Hello, world!");
+console.log(reply.choices[0].message.content);
 ```
 
 ---
@@ -77,8 +78,8 @@ export LOCAL_DEV_KEK=$(openssl rand -hex 32)   # 32-byte hex key
 Expose via:
 
 ```ts
-import { registry } from '@traceprompt/node/dist/metrics'
-app.get('/metrics', (_, res) => res.end(registry.metrics()))
+import { registry } from "@traceprompt/node/dist/metrics";
+app.get("/metrics", (_, res) => res.end(registry.metrics()));
 ```
 
 ---
@@ -87,7 +88,7 @@ app.get('/metrics', (_, res) => res.end(registry.metrics()))
 
 ### Does traceprompt store my data?
 
-No. The SDK encrypts prompt + response **before** they leave your process, using **your** KMS key. TracePrompt’s ingest service sees only ciphertext.
+No. The SDK encrypts prompt + response **before** they leave your process, using **your** KMS key. Traceprompt’s ingest service sees only ciphertext.
 
 ### How much latency does it add?
 

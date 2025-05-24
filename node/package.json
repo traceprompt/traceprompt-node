@@ -1,6 +1,6 @@
 {
   "name": "@traceprompt/node",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Audit-ready, client-side–encrypted logging SDK for LLM apps",
   "license": "Apache-2.0",
   "main": "dist/index.js",

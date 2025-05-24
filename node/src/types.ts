@@ -1,7 +1,7 @@
 /**
  * types.ts
  * ------------------------------------------------------
- * Central type declarations used across the TracePrompt
+ * Central type declarations used across the Traceprompt
  * SDK.  They are re-exported in `src/index.ts` so that
  * downstream applications can `import type { … }`.
  * ------------------------------------------------------
@@ -14,7 +14,7 @@ export interface TracePromptInit {
   /** Unique ID for the tenant / customer. */
   tenantId: string;
 
-  /** API key for authentication with the TracePrompt ingest service. */
+  /** API key for authentication with the Traceprompt ingest service. */
   apiKey: string;
 
   /**

@@ -28,7 +28,7 @@ export const encryptHist = new Histogram({
 /* ---------- Counter: batch flush failures ------------------------ */
 export const flushFailures = new Counter({
   name: "traceprompt_flush_failures_total",
-  help: "Number of failed POSTs to the TracePrompt ingest API",
+  help: "Number of failed POSTs to the Traceprompt ingest API",
   registers: [registry],
 });
 
