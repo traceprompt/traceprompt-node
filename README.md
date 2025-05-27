@@ -57,10 +57,6 @@ yarn test:node     # tests Node SDK
 yarn publish:node  # publishes Node SDK
 ```
 
-## Design
-
-See [`design.md`](./design.md) for the complete technical specification.
-
 ## License
 
 Apache-2.0

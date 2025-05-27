@@ -4,7 +4,15 @@
   "description": "Audit-ready, client-side–encrypted logging SDK for LLM apps",
   "license": "Apache-2.0",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "engines": {
     "node": ">=18"
   },
@@ -22,10 +30,12 @@
     "@napi-rs/blake-hash": "^1.3.4",
     "json-stable-stringify": "^1.3.0",
     "merkletreejs": "0.5.2",
+    "p-limit": "^6.2.0",
     "prom-client": "15.1.3",
     "tiktoken": "^1.0.21",
     "tsup": "^8.5.0",
     "undici": "7.10.0",
+    "winston": "^3.17.0",
     "yaml": "^2.8.0"
   },
   "devDependencies": {
