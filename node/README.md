@@ -7,7 +7,7 @@ Two lines of code wrap your `openai`, `anthropic`, `groq` (or any HTTP-based) cl
 
 ---
 
-## ✨ Features
+## Features
 
 - **Client-side AES-256-GCM** encryption with **customer-managed KMS keys** – traceprompt never sees clear-text.
 - **BLAKE3 hash-chain + hourly Merkle root anchoring** (OpenTimestamps by default).
@@ -88,15 +88,15 @@ app.get("/metrics", (_, res) => res.end(registry.metrics()));
 
 ### Does traceprompt store my data?
 
-No. The SDK encrypts prompt + response **before** they leave your process, using **your** KMS key. Traceprompt’s ingest service sees only ciphertext.
+No. The SDK encrypts prompt + response **before** they leave your process, using **your** KMS key. Traceprompt's ingest service sees only ciphertext.
 
 ### How much latency does it add?
 
-\~0.8 ms encryption + 0.05 ms hashing on a modern CPU; network flush is asynchronous.
+~0.8 ms encryption + 0.05 ms hashing on a modern CPU; network flush is asynchronous.
 
 ### Can I self-host?
 
-Yes—point `ingestUrl` at your own deployment. The ingest service (Go binary + Prisma schema) is OSS under `server/`.
+Contact us for self-hosting options and enterprise deployment support.
 
 ### What about PII masking?
 

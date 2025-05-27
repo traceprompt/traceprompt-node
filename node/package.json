@@ -3,6 +3,16 @@
   "version": "1.0.0",
   "description": "Audit-ready, client-side–encrypted logging SDK for LLM apps",
   "license": "Apache-2.0",
+  "keywords": [
+    "audit",
+    "logging",
+    "llm",
+    "encryption",
+    "compliance",
+    "openai",
+    "anthropic",
+    "typescript"
+  ],
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
