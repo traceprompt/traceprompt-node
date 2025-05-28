@@ -2,6 +2,7 @@ import { buildClient, CommitmentPolicy } from "@aws-crypto/client-node";
 
 import { buildKeyring } from "../keyring";
 import { EncryptedBundle } from "../types";
+import { encryptHist } from "../metrics";
 
 const { encrypt, decrypt } = buildClient(
   CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
@@ -9,16 +10,19 @@ const { encrypt, decrypt } = buildClient(
 
 export async function encryptBuffer(plain: Buffer): Promise<EncryptedBundle> {
   const keyring = buildKeyring();
-
-  const { result, messageHeader } = await encrypt(keyring, plain);
-
-  return {
-    ciphertext: Buffer.from(result).toString("base64"),
-    encryptedDataKey: Buffer.from(
-      messageHeader.encryptedDataKeys[0].encryptedDataKey
-    ).toString("base64"),
-    suiteId: messageHeader.suiteId, // optional diagnostics
-  };
+  const endTimer = encryptHist.startTimer();
+  try {
+    const { result, messageHeader } = await encrypt(keyring, plain);
+    return {
+      ciphertext: Buffer.from(result).toString("base64"),
+      encryptedDataKey: Buffer.from(
+        messageHeader.encryptedDataKeys[0].encryptedDataKey
+      ).toString("base64"),
+      suiteId: messageHeader.suiteId, // optional diagnostics
+    };
+  } finally {
+    endTimer();
+  }
 }
 
 export async function decryptBundle(bundle: EncryptedBundle): Promise<Buffer> {

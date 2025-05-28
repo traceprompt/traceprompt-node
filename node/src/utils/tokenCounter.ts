@@ -1,21 +1,36 @@
 let encodeFn: ((s: string) => number) | null = null;
 
+import { Histogram } from "prom-client";
+import { registry } from "../metrics";
+
+const tokenCountHist = new Histogram({
+  name: "traceprompt_tokens_per_string",
+  help: "Number of tokens counted per string passed to countTokens()",
+  buckets: [1, 5, 10, 20, 50, 100, 200, 500, 1000],
+  registers: [registry],
+});
+
 export function setCustomEncoder(fn: ((s: string) => number) | null): void {
   encodeFn = fn;
 }
 
 export function countTokens(text: string): number {
-  /* ---------- Prefer user-supplied encoder -------------- */
-  if (encodeFn) return encodeFn(text);
-
-  /* ---------- Try tiktoken on first call ---------------- */
-  if (maybeInitTiktoken()) {
-    return encodeFn!(text);
+  if (encodeFn) {
+    const t = encodeFn(text);
+    tokenCountHist.observe(t);
+    return t;
   }
 
-  /* ---------- Heuristic fallback ------------------------ */
+  if (maybeInitTiktoken()) {
+    const t = encodeFn!(text);
+    tokenCountHist.observe(t);
+    return t;
+  }
+
   const words = text.trim().split(/\s+/g).length;
-  return Math.ceil(words * 1.33);
+  const tokens = Math.ceil(words * 1.33);
+  tokenCountHist.observe(tokens);
+  return tokens;
 }
 
 let triedTiktoken = false;
@@ -31,7 +46,6 @@ function maybeInitTiktoken(): boolean {
     encodeFn = (s: string): number => enc.encode(s).length;
     return true;
   } catch {
-    /* tiktoken not installed or failed to load */
     return false;
   }
 }

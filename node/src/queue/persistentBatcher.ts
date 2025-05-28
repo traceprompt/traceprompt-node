@@ -7,6 +7,7 @@ import { ConfigManager } from "../config";
 import type { QueueItem } from "../types";
 import { Transport } from "../network/transport";
 import { log } from "../utils/logger";
+import { queueGauge, flushFailures } from "../metrics";
 
 function getConfig() {
   return ConfigManager.cfg;
@@ -102,6 +103,7 @@ async function append(item: QueueItem) {
   }
 
   ringPush(item);
+  queueGauge.set(len);
   log.verbose("Record added to ring buffer", {
     ringSize: len,
     maxRingSize: getMaxRamRecords(),
@@ -248,6 +250,8 @@ async function flushOnce() {
     const totalPending =
       totalDiskRecords + (ringRecords.length > batch.length ? 0 : len);
 
+    queueGauge.set(totalPending);
+
     log.info("Starting batch flush", {
       batchSize: batch.length,
       fromRingBuffer: Math.min(ringRecords.length, batch.length),
@@ -296,6 +300,7 @@ async function flushOnce() {
               fromDisk: diskRecordsUsed,
               remainingOnDisk: remaining.length,
             });
+            queueGauge.set(totalPending - batch.length);
           } else {
             await fs.writeFile(getLogPath(), "");
             log.info("Batch flush successful, outbox cleared", {
@@ -303,17 +308,20 @@ async function flushOnce() {
               fromRingBuffer: ringRecords.length,
               fromDisk: diskRecordsUsed,
             });
+            queueGauge.set(totalPending - batch.length);
           }
         } else {
           log.info("Batch flush successful, used only ring buffer", {
             flushedRecords: batch.length,
             diskRecordsRemaining: totalDiskRecords,
           });
+          queueGauge.set(totalPending - batch.length);
         }
       } else {
         log.info("Batch flush successful, used only ring buffer", {
           flushedRecords: batch.length,
         });
+        queueGauge.set(totalPending - batch.length);
       }
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : String(e);
@@ -378,6 +386,8 @@ async function flushOnce() {
           totalPending: totalPending,
         });
       }
+
+      flushFailures.inc();
 
       throw e;
     }

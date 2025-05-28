@@ -9,6 +9,13 @@ export const encryptHist = new Histogram({
   registers: [registry],
 });
 
+export const tokenCountHist = new Histogram({
+  name: "traceprompt_token_count",
+  help: "Tokens counted per prompt/response",
+  buckets: [1, 5, 10, 20, 50, 100, 200, 500, 1000],
+  registers: [registry],
+});
+
 export const flushFailures = new Counter({
   name: "traceprompt_flush_failures_total",
   help: "Number of failed POSTs to the Traceprompt ingest API",

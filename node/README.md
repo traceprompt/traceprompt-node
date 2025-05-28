@@ -78,7 +78,7 @@ export LOCAL_DEV_KEK=$(openssl rand -hex 32)   # 32-byte hex key
 Expose via:
 
 ```ts
-import { registry } from "@traceprompt/node/dist/metrics";
+import { registry } from "@traceprompt/node";
 app.get("/metrics", (_, res) => res.end(registry.metrics()));
 ```
 

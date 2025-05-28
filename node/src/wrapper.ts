@@ -7,6 +7,16 @@ import { PersistentBatcher as Batcher } from "./queue/persistentBatcher";
 const stringify = require("json-stable-stringify") as (v: any) => string;
 import type { TracePromptInit, WrapOpts, EncryptedBundle } from "./types";
 
+import { registry } from "./metrics";
+import { Histogram } from "prom-client";
+
+const wrapperLatencyHist = new Histogram({
+  name: "traceprompt_llm_wrapper_latency_ms",
+  help: "End‑to‑end latency from prompt send to response receive in the SDK wrapper (ms)",
+  buckets: [50, 100, 250, 500, 1000, 2000, 5000],
+  registers: [registry],
+});
+
 export function initTracePrompt(cfg?: Partial<TracePromptInit>): void {
   initCfg(cfg);
 }
@@ -21,6 +31,8 @@ export function wrapLLM<P extends Record<string, any>, R>(
     const t0 = performance.now();
     const result = await originalFn(prompt, params);
     const t1 = performance.now();
+
+    wrapperLatencyHist.observe(t1 - t0);
 
     const plaintextJson = JSON.stringify({
       prompt,
