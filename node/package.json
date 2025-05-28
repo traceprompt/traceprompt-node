@@ -1,7 +1,7 @@
 {
   "name": "@traceprompt/node",
   "version": "1.0.2",
-  "description": "Audit-ready, client-side–encrypted logging SDK for LLM apps",
+  "description": "Client-side encrypted, audit-ready logging for LLM applications",
   "license": "Apache-2.0",
   "keywords": [
     "audit",
@@ -11,7 +11,10 @@
     "compliance",
     "openai",
     "anthropic",
-    "typescript"
+    "typescript",
+    "finra",
+    "hipaa",
+    "immutable"
   ],
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -29,10 +32,10 @@
   "scripts": {
     "build": "tsup",
     "build:watch": "tsup --watch",
-    "postbuild": "yarn link",
+    "postbuild": "npm link",
     "test": "uvu -r ts-node/register tests",
     "lint": "eslint \"src/**/*.ts\"",
-    "publish-sdk": "yarn build && npm publish --access public"
+    "publish-sdk": "npm run build && npm publish --access public"
   },
   "dependencies": {
     "@aws-crypto/client-node": "4.2.1",
