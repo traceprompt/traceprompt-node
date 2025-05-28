@@ -1,20 +1,20 @@
 ### `README.md`
 
-# traceprompt SDK for Node.js
+# Traceprompt SDK for Node.js
 
-**Audit-ready, tamper-evident logging for every LLM prompt/response.**  
-Two lines of code wrap your `openai`, `anthropic`, `groq` (or any HTTP-based) client and stream encrypted, hash-chained events to an immutable ledger—ready for FINRA, HIPAA §164.312(b), and EU AI Act audits.
+**Audit-ready, tamper-evident logging for every LLM prompt and response.**  
+Two lines of code wrap your `openai`, `anthropic` or any LLM client to stream encrypted, hash-chained events to an immutable ledger. Ready for FINRA, HIPAA, and EU AI Act compliance audits.
 
 ---
 
 ## Features
 
-- **Client-side AES-256-GCM** encryption with **customer-managed KMS keys** – traceprompt never sees clear-text.
-- **BLAKE3 hash-chain + hourly Merkle root anchoring** (OpenTimestamps by default).
-- **Automatic token counting** and latency metrics.
-- **Batcher** with back-off retries; < 2 ms median overhead.
-- **Prometheus hooks** out-of-the-box.
-- Works anywhere Node 18 + runs—Fargate, Vercel, Lambdas, k8s.
+- **Client-side AES-256-GCM encryption** with **customer-managed KMS keys** - Traceprompt never sees cleartext
+- **BLAKE3 hash chain with hourly Merkle root anchoring** to Bitcoin via OpenTimestamps
+- **Automatic token counting** and latency metrics
+- **Batched transport** with exponential backoff retry - under 2ms P95 overhead
+- **Prometheus metrics** included
+- Works on Node 18+ - Fargate, Vercel, Lambda, Kubernetes
 
 ---
 
@@ -36,13 +36,13 @@ initTracePrompt({
 });
 
 const openai = new OpenAI();
-const safeChat = wrapLLM(openai.chat.completions.create, {
+const trackedChat = wrapLLM(openai.chat.completions.create, {
   modelVendor: "openai",
   modelName: "gpt-4o",
   userId: "alice",
 });
 
-const reply = await safeChat("Hello, world!");
+const reply = await trackedChat("Hello, world!");
 console.log(reply.choices[0].message.content);
 ```
 
@@ -50,15 +50,15 @@ console.log(reply.choices[0].message.content);
 
 ## Configuration
 
-| Key               | Description                            | Source (priority)                                         |
-| ----------------- | -------------------------------------- | --------------------------------------------------------- |
-| `tenantId`        | Unique tenant / customer ID.           | code ➔ env `TRACEPROMPT_TENANT_ID` ➔ `.tracepromptrc.yml` |
-| `cmkArn`          | AWS KMS CMK ARN (or `"local-dev"`).    | code ➔ env `TP_CMK_ARN` ➔ rc file                         |
-| `ingestUrl`       | HTTPS endpoint for batch ingest.       | code ➔ env `TRACEPROMPT_INGEST_URL` ➔ rc                  |
-| `batchSize`       | Flush queue at N records (default 25). | same hierarchy                                            |
-| `flushIntervalMs` | Flush every N ms (default 2000).       | same hierarchy                                            |
+| Key               | Description                           | Source (priority)                                         |
+| ----------------- | ------------------------------------- | --------------------------------------------------------- |
+| `tenantId`        | Unique tenant identifier              | code → env `TRACEPROMPT_TENANT_ID` → `.tracepromptrc.yml` |
+| `cmkArn`          | AWS KMS CMK ARN (or `"local-dev"`)    | code → env `TP_CMK_ARN` → rc file                         |
+| `ingestUrl`       | HTTPS endpoint for batch ingest       | code → env `TRACEPROMPT_INGEST_URL` → rc                  |
+| `batchSize`       | Flush queue at N records (default 25) | same hierarchy                                            |
+| `flushIntervalMs` | Flush every N ms (default 2000)       | same hierarchy                                            |
 
-Local-dev mode
+Local development mode:
 
 ```bash
 export TP_CMK_ARN=local-dev
@@ -69,11 +69,11 @@ export LOCAL_DEV_KEK=$(openssl rand -hex 32)   # 32-byte hex key
 
 ## Metrics
 
-| Metric                             | Type      | What it tells you               |
-| ---------------------------------- | --------- | ------------------------------- |
-| `traceprompt_encrypt_ms`           | Histogram | Client-side encryption latency. |
-| `traceprompt_flush_failures_total` | Counter   | Failed batch POSTs.             |
-| `traceprompt_queue_depth`          | Gauge     | Current in-memory queue size.   |
+| Metric                             | Type      | Description                    |
+| ---------------------------------- | --------- | ------------------------------ |
+| `traceprompt_prompts_total`        | Counter   | Total prompts processed        |
+| `traceprompt_encrypt_ms_p95`       | Histogram | Client-side encryption latency |
+| `traceprompt_flush_failures_total` | Counter   | Failed batch uploads           |
 
 Expose via:
 
@@ -86,31 +86,20 @@ app.get("/metrics", (_, res) => res.end(registry.metrics()));
 
 ## FAQ
 
-### Does traceprompt store my data?
+### Does Traceprompt store my data in cleartext?
 
-No. The SDK encrypts prompt + response **before** they leave your process, using **your** KMS key. Traceprompt's ingest service sees only ciphertext.
+No. The SDK encrypts prompts and responses using AES-256-GCM with your KMS key before they leave your process. Traceprompt's servers only receive and store encrypted ciphertext.
 
 ### How much latency does it add?
 
-~0.8 ms encryption + 0.05 ms hashing on a modern CPU; network flush is asynchronous.
+Approximately 0.19ms for encryption plus 0.01ms for hashing on modern hardware. Network uploads are asynchronous and batched.
+
+### What about data privacy?
+
+All data is encrypted client-side using your customer-managed encryption key (CMK). Zero cleartext ever reaches Traceprompt servers. The hash chain provides tamper evidence without exposing content.
 
 ### Can I self-host?
 
-Contact us for self-hosting options and enterprise deployment support.
-
-### What about PII masking?
-
-Client-side masking pipeline (regex/FPE sync + optional async NER) ships in `@traceprompt/mask` add-on.
+Yes. The design supports local PostgreSQL with the same Prisma schema. Contact us for enterprise deployment guidance.
 
 ---
-
-## Contributing
-
-```bash
-git clone https://github.com/traceprompt/sdk-node.git
-pnpm install
-pnpm test        # runs uvu tests
-pnpm build
-```
-
-PRs & issues welcome!
