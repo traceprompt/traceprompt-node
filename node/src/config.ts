@@ -3,6 +3,8 @@ import * as path from "node:path";
 import * as yaml from "yaml";
 import { TracePromptInit } from "./types";
 
+process.env.AWS_PROFILE = "traceprompt-ingest-role";
+
 function readYaml(filePath: string): Partial<TracePromptInit> {
   try {
     const abs = path.resolve(process.cwd(), filePath);
