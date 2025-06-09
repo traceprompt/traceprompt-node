@@ -3,10 +3,10 @@ import { ConfigManager } from "../config";
 import { Transport } from "../network/transport";
 
 export async function flushBatch(batch: QueueItem[]): Promise<void> {
-  const { tenantId } = ConfigManager.cfg;
+  const { orgId } = ConfigManager.cfg;
 
   const body = {
-    tenantId,
+    orgId,
     records: batch.map(({ payload, leafHash }) => ({
       payload,
       leafHash,

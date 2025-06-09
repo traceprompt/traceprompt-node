@@ -1,5 +1,5 @@
 import { performance } from "node:perf_hooks";
-import { initTracePrompt as initCfg, ConfigManager } from "./config";
+import { initTracePrompt as initCfgAsync, ConfigManager } from "./config";
 import { encryptBuffer } from "./crypto/encryptor";
 import { computeLeaf } from "./crypto/hasher";
 import { countTokens } from "./utils/tokenCounter";
@@ -17,8 +17,10 @@ const wrapperLatencyHist = new Histogram({
   registers: [registry],
 });
 
-export function initTracePrompt(cfg?: Partial<TracePromptInit>): void {
-  initCfg(cfg);
+export async function initTracePrompt(
+  cfg?: Partial<TracePromptInit>
+): Promise<void> {
+  await initCfgAsync(cfg);
 }
 
 export function wrapLLM<P extends Record<string, any>, R>(
@@ -39,13 +41,11 @@ export function wrapLLM<P extends Record<string, any>, R>(
       response: result,
     });
 
-    const enc: EncryptedBundle = await encryptBuffer(
-      Buffer.from(plaintextJson, "utf8")
-    );
+    const enc = await encryptBuffer(Buffer.from(plaintextJson, "utf8"));
 
     const payload = {
       ...staticMeta,
-      tenantId: ConfigManager.cfg.tenantId,
+      orgId: ConfigManager.cfg.orgId,
       modelVendor: meta.modelVendor,
       modelName: meta.modelName,
       userId: meta.userId,

@@ -25,45 +25,64 @@ npm i @traceprompt/node
 # or yarn add @traceprompt/node
 ```
 
-```ts
+**1. Configure your API key**
+
+Create a `traceprompt.yml` file:
+
+```yaml
+apiKey: tp_live_xxxxx
+
+# Optional: add static metadata to all logs
+staticMeta:
+  app: "my-llm-service"
+  env: "prod"
+```
+
+Or use environment variables:
+
+```bash
+export TRACEPROMPT_API_KEY=tp_live_xxxxx
+export TRACEPROMPT_LOG_LEVEL=verbose
+```
+
+**2. Wrap your LLM calls**
+
+```typescript
 import { initTracePrompt, wrapLLM } from "@traceprompt/node";
 import OpenAI from "openai";
 
-initTracePrompt({
-  tenantId: "tnt_abc123",
-  cmkArn: process.env.TP_CMK_ARN!, // AWS KMS CMK ARN
-  ingestUrl: "https://api.traceprompt.dev/v1/ingest",
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const openai = new OpenAI();
-const trackedChat = wrapLLM(openai.chat.completions.create, {
-  modelVendor: "openai",
-  modelName: "gpt-4o",
-  userId: "alice",
-});
+await initTracePrompt(); // Auto-resolves orgId and cmkArn from API key
 
-const reply = await trackedChat("Hello, world!");
-console.log(reply.choices[0].message.content);
+const trackedChat = wrapLLM(
+  (prompt) =>
+    openai.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "gpt-4o",
+    }),
+  {
+    modelVendor: "openai",
+    modelName: "gpt-4o",
+    userId: "alice",
+  }
+);
+
+const response = await trackedChat("Hello, world!");
+console.log(response.choices[0].message.content);
 ```
 
 ---
 
 ## Configuration
 
-| Key               | Description                           | Source (priority)                                         |
-| ----------------- | ------------------------------------- | --------------------------------------------------------- |
-| `tenantId`        | Unique tenant identifier              | code → env `TRACEPROMPT_TENANT_ID` → `.tracepromptrc.yml` |
-| `cmkArn`          | AWS KMS CMK ARN (or `"local-dev"`)    | code → env `TP_CMK_ARN` → rc file                         |
-| `ingestUrl`       | HTTPS endpoint for batch ingest       | code → env `TRACEPROMPT_INGEST_URL` → rc                  |
-| `batchSize`       | Flush queue at N records (default 25) | same hierarchy                                            |
-| `flushIntervalMs` | Flush every N ms (default 2000)       | same hierarchy                                            |
+| Key          | Description                | Source (priority)                                    |
+| ------------ | -------------------------- | ---------------------------------------------------- |
+| `apiKey`     | Your TracePrompt API key   | code → env `TRACEPROMPT_API_KEY` → `traceprompt.yml` |
+| `staticMeta` | Metadata added to all logs | code → `traceprompt.yml` only                        |
+| `logLevel`   | SDK logging verbosity      | env `TRACEPROMPT_LOG_LEVEL`                          |
 
-Local development mode:
-
-```bash
-export TP_CMK_ARN=local-dev
-export LOCAL_DEV_KEK=$(openssl rand -hex 32)   # 32-byte hex key
-```
+**Note:** `orgId`, `cmkArn`, and `ingestUrl` are automatically resolved from your API key - no manual configuration needed.
 
 ---
 

@@ -31,6 +31,7 @@ const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
 let bootstrapDone = false;
 let pLimitPromise: Promise<any> | null = null;
+let closing = false;
 
 async function getPLimit() {
   if (!pLimitPromise) {
@@ -83,6 +84,10 @@ function ringDrip(n: number): QueueItem[] {
 }
 
 async function append(item: QueueItem) {
+  if (closing) {
+    throw new Error("TracePrompt SDK is shutting down, rejecting new events");
+  }
+
   await bootstrap();
   initializeTimer();
 
@@ -261,7 +266,7 @@ async function flushOnce() {
     });
 
     const body = {
-      tenantId: cfg.tenantId,
+      orgId: cfg.orgId,
       records: batch.map(({ payload, leafHash }) => ({ payload, leafHash })),
     };
 
@@ -419,29 +424,110 @@ function initializeTimer() {
   flushTimer.unref();
 }
 
-for (const sig of ["SIGINT", "SIGTERM", "beforeExit"] as const) {
-  process.once(sig, async () => {
-    log.info(`Received ${sig} signal, performing graceful shutdown`);
-
-    if (flushTimer) {
-      clearInterval(flushTimer);
-      log.debug("Cleared periodic flush timer");
-    }
-
+async function flushWithRetry(opts: { maxRetries: number }): Promise<void> {
+  for (let attempt = 1; attempt <= opts.maxRetries; attempt++) {
     try {
       await flushOnce();
-      log.info("Final flush completed successfully");
+      return; // Success
     } catch (error) {
-      log.warn("Final flush failed during shutdown", {
+      if (attempt === opts.maxRetries) throw error;
+
+      const delayMs = Math.min(500 * Math.pow(2, attempt - 1), 4000);
+      log.debug("Flush attempt failed, retrying", {
+        attempt,
+        maxRetries: opts.maxRetries,
+        delayMs,
         error: error instanceof Error ? error.message : String(error),
       });
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
-
-    process.exit(0);
-  });
+  }
 }
+
+async function drainOutboxWithRetry(opts: {
+  maxRetries: number;
+  maxTimeoutMs: number;
+}): Promise<void> {
+  const startTime = Date.now();
+  let attempt = 0;
+
+  while (Date.now() - startTime < opts.maxTimeoutMs) {
+    attempt++;
+
+    try {
+      // Check if outbox is empty
+      const outboxContent = await fs
+        .readFile(getLogPath(), "utf8")
+        .catch(() => "");
+      if (!outboxContent.trim()) {
+        log.info("Outbox is empty, drain complete");
+        return;
+      }
+
+      // Flush with retry
+      await flushWithRetry({ maxRetries: opts.maxRetries });
+    } catch (error) {
+      log.warn("Outbox drain attempt failed", {
+        attempt,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      const delayMs = Math.min(500 * Math.pow(2, attempt - 1), 4000);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  throw new Error(`Outbox drain timed out after ${opts.maxTimeoutMs}ms`);
+}
+
+async function gracefulShutdown(): Promise<void> {
+  log.info("Starting graceful shutdown");
+  closing = true; // Stop accepting new events
+
+  if (flushTimer) {
+    clearInterval(flushTimer);
+    log.debug("Cleared periodic flush timer");
+  }
+
+  // 1. Flush in-memory ring buffer first
+  log.info("Flushing in-memory ring buffer");
+  await flushWithRetry({ maxRetries: 3 });
+
+  // 2. Drain entire outbox.log file
+  log.info("Draining persistent outbox");
+  await drainOutboxWithRetry({ maxRetries: 5, maxTimeoutMs: 30_000 });
+
+  log.info("Graceful shutdown completed successfully");
+}
+
+process.on("SIGTERM", async () => {
+  try {
+    await gracefulShutdown();
+    process.exit(0);
+  } catch (error) {
+    log.error("Graceful shutdown failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    flushFailures.inc();
+    process.exit(1); // Non-zero exit for K8s to detect failure
+  }
+});
+
+process.on("SIGINT", async () => {
+  try {
+    await gracefulShutdown();
+    process.exit(0);
+  } catch (error) {
+    log.error("Graceful shutdown failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    flushFailures.inc();
+    process.exit(1); // Non-zero exit for K8s to detect failure
+  }
+});
 
 export const PersistentBatcher = {
   enqueue: append,
   flush: flushOnce,
+  gracefulShutdown,
 };

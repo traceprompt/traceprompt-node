@@ -70,7 +70,7 @@ async function sendJson(opts: PostOptions): Promise<void> {
             status: res.status,
             url: url,
             response: msg,
-            hint: "Check your API key and tenant permissions",
+            hint: "Check your API key and organization permissions",
           });
         } else {
           log.error(`Client error: ${errorMessage}`, {
