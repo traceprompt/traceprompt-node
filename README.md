@@ -1,3 +1,5 @@
+![Traceprompt Logo](branding/logo.png)
+
 # Traceprompt SDK for Node.js
 
 **Audit-ready, tamper-evident logging for every LLM prompt and response.**  
