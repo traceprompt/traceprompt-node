@@ -14,7 +14,6 @@ export async function encryptBuffer(plain: Buffer): Promise<EncryptedBundle> {
   const keyring = buildKeyring();
   const endTimer = encryptHist.startTimer();
   try {
-    console.log("Encrypting buffer", ConfigManager.cfg);
     log.info("Encrypting buffer", {
       orgId: ConfigManager.cfg.orgId,
     });

@@ -124,7 +124,7 @@ class ConfigManagerClass {
     const merged: TracePromptInit = {
       apiKey: "",
       cmkArn: "",
-      ingestUrl: "http://localhost:3000/v1/ingest", // Default for local development
+      ingestUrl: "http://localhost:8080/v1/ingest", // Default for local development
       batchSize: 25,
       flushIntervalMs: 2_000,
       staticMeta: {},

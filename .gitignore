@@ -1,100 +1,28 @@
-# Node.js SDK
-node/node_modules/
-node/dist/
-node/.nyc_output/
-node/coverage/
-node/*.log
-node/.env*
+# Build outputs
+dist/
+*.tsbuildinfo
 
-# Python SDK  
-python/__pycache__/
-python/*.py[cod]
-python/*$py.class
-python/*.so
-python/build/
-python/develop-eggs/
-python/dist/
-python/downloads/
-python/eggs/
-python/.eggs/
-python/lib/
-python/lib64/
-python/parts/
-python/sdist/
-python/var/
-python/wheels/
-python/*.egg-info/
-python/.installed.cfg
-python/*.egg
-python/MANIFEST
-python/.env*
-python/.venv/
-python/env/
-python/venv/
-python/ENV/
-python/env.bak/
-python/venv.bak/
-python/.pytest_cache/
-python/.coverage
-python/.mypy_cache/
-python/.ruff_cache/
+# Dependency directories
+node_modules/
 
-# Go SDK
-go/vendor/
-go/*.exe
-go/*.exe~
-go/*.dll
-go/*.so
-go/*.dylib
-go/*.test
-go/*.out
-go/go.work
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Rust SDK (future)
-rust/target/
-rust/*.rs.bk
-rust/Cargo.lock
+# Environment variables
+.env
+.env.local
+.env.*.local
 
-# Java SDK (future)
-java/*.class
-java/*.log
-java/*.jar
-java/*.war
-java/*.nar
-java/*.ear
-java/*.zip
-java/*.tar.gz
-java/*.rar
-java/target/
-java/.mvn/
-
-# IDE & OS
-.DS_Store
+# Editor specific files
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# Git
-.git/
-
-# Logs
-**/logs
-**/*.log
-**/npm-debug.log*
-**/yarn-debug.log*
-**/yarn-error.log*
-
-# Runtime data
-**/pids
-**/*.pid
-**/*.seed
-**/*.pid.lock
-
-# Environment variables
-**/.env
-**/.env.local
-**/.env.development.local
-**/.env.test.local
-**/.env.production.local
+# OS specific files
+.DS_Store
+Thumbs.db 

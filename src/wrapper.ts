@@ -5,7 +5,7 @@ import { computeLeaf } from "./crypto/hasher";
 import { countTokens } from "./utils/tokenCounter";
 import { PersistentBatcher as Batcher } from "./queue/persistentBatcher";
 const stringify = require("json-stable-stringify") as (v: any) => string;
-import type { TracePromptInit, WrapOpts, EncryptedBundle } from "./types";
+import type { TracePromptInit, WrapOpts } from "./types";
 
 import { registry } from "./metrics";
 import { Histogram } from "prom-client";

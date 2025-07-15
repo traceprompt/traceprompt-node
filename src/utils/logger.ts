@@ -23,7 +23,7 @@ function createLogger(): winston.Logger {
       }),
       winston.format.errors({ stack: true }),
       winston.format.printf(({ level, message, timestamp, stack }) => {
-        const prefix = `[${timestamp}] [TracePrompt] [${level.toUpperCase()}]`;
+        const prefix = `[${timestamp}] [Traceprompt] [${level.toUpperCase()}]`;
         if (stack) {
           return `${prefix} ${message}\n${stack}`;
         }

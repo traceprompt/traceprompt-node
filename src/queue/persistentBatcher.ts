@@ -85,7 +85,7 @@ function ringDrip(n: number): QueueItem[] {
 
 async function append(item: QueueItem) {
   if (closing) {
-    throw new Error("TracePrompt SDK is shutting down, rejecting new events");
+    throw new Error("Traceprompt SDK is shutting down, rejecting new events");
   }
 
   await bootstrap();
@@ -123,7 +123,7 @@ async function append(item: QueueItem) {
         outboxPath: getLogPath(),
       });
       throw new Error(
-        "TracePrompt SDK backpressure: local outbox full, ingest unreachable."
+        "Traceprompt SDK backpressure: local outbox full, ingest unreachable."
       );
     }
 
