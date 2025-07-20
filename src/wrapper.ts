@@ -3,6 +3,7 @@ import { initTracePrompt as initCfgAsync, ConfigManager } from "./config";
 import { encryptBuffer } from "./crypto/encryptor";
 import { computeLeaf } from "./crypto/hasher";
 import { countTokens } from "./utils/tokenCounter";
+import { analyzePiiInPromptResponse } from "./utils/piiDetector";
 import { PersistentBatcher as Batcher } from "./queue/persistentBatcher";
 const stringify = require("json-stable-stringify") as (v: any) => string;
 import type { TracePromptInit, WrapOpts } from "./types";
@@ -36,6 +37,13 @@ export function wrapLLM<P extends Record<string, any>, R>(
 
     wrapperLatencyHist.observe(t1 - t0);
 
+    // Analyze PII in both prompt and response
+    const responseText =
+      typeof result === "string" ? result : JSON.stringify(result);
+    const piiAnalysis = await analyzePiiInPromptResponse(prompt, responseText);
+
+    console.log("PII Analysis", piiAnalysis);
+
     const plaintextJson = JSON.stringify({
       prompt,
       response: result,
@@ -52,9 +60,22 @@ export function wrapLLM<P extends Record<string, any>, R>(
       ts_client: new Date().toISOString(),
       latency_ms: +(t1 - t0).toFixed(2),
       prompt_tokens: countTokens(prompt),
-      response_tokens: countTokens(
-        typeof result === "string" ? result : JSON.stringify(result)
-      ),
+      response_tokens: countTokens(responseText),
+      // PII detection results
+      pii_detected: piiAnalysis.overallPiiDetected,
+      pii_types: piiAnalysis.allPiiTypes,
+      pii_risk_level: piiAnalysis.prompt.piiDetected || piiAnalysis.response.piiDetected 
+        ? (piiAnalysis.prompt.riskLevel === "critical" || piiAnalysis.response.riskLevel === "critical" ? "critical"
+          : piiAnalysis.prompt.riskLevel === "high" || piiAnalysis.response.riskLevel === "high" ? "high"
+          : piiAnalysis.prompt.riskLevel === "medium" || piiAnalysis.response.riskLevel === "medium" ? "medium"
+          : "low") 
+        : "low",
+      prompt_pii_detected: piiAnalysis.prompt.piiDetected,
+      prompt_pii_types: piiAnalysis.prompt.piiTypes,
+      prompt_pii_risk_level: piiAnalysis.prompt.riskLevel,
+      response_pii_detected: piiAnalysis.response.piiDetected,
+      response_pii_types: piiAnalysis.response.piiTypes,
+      response_pii_risk_level: piiAnalysis.response.riskLevel,
       enc,
     };
 

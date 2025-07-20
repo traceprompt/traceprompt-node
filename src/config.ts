@@ -18,9 +18,7 @@ interface WhoAmIResponse {
     scope: string;
     keyId: string;
   };
-}   
-
-process.env.AWS_PROFILE = "traceprompt-ingest-role";
+}
 
 /**
  * Auto-resolve organization info from API key
