@@ -2,5 +2,8 @@ export { initTracePrompt, wrapLLM } from "./wrapper";
 export { decryptBundle } from "./crypto/encryptor";
 export { registry } from "./metrics";
 export { PersistentBatcher } from "./queue/persistentBatcher";
+export { analyzePiiInPromptResponse, detectPii } from "./utils/piiDetector";
 
 export type { TracePromptInit, WrapOpts, EncryptedBundle } from "./types";
+
+export type { PiiDetectionResult } from "./utils/piiDetector";

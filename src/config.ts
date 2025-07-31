@@ -18,9 +18,7 @@ interface WhoAmIResponse {
     scope: string;
     keyId: string;
   };
-}   
-
-process.env.AWS_PROFILE = "traceprompt-ingest-role";
+}
 
 /**
  * Auto-resolve organization info from API key
@@ -110,6 +108,9 @@ class ConfigManagerClass {
       ...(process.env["TRACEPROMPT_API_KEY"] && {
         apiKey: process.env["TRACEPROMPT_API_KEY"],
       }),
+      ...(process.env["TRACEPROMPT_INGEST_URL"] && {
+        ingestUrl: process.env["TRACEPROMPT_INGEST_URL"],
+      }),
       ...(process.env["TRACEPROMPT_BATCH_SIZE"] && {
         batchSize: Number(process.env["TRACEPROMPT_BATCH_SIZE"]),
       }),
@@ -121,10 +122,16 @@ class ConfigManagerClass {
       }),
     };
 
+    // Determine default ingest URL based on NODE_ENV
+    const defaultIngestUrl =
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:8080/v1/ingest" // Local dev server
+        : "https://api-staging.traceprompt.com/v1/ingest"; // Staging API
+
     const merged: TracePromptInit = {
       apiKey: "",
       cmkArn: "",
-      ingestUrl: "http://localhost:8080/v1/ingest", // Default for local development
+      ingestUrl: defaultIngestUrl,
       batchSize: 25,
       flushIntervalMs: 2_000,
       staticMeta: {},

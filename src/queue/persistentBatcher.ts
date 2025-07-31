@@ -265,8 +265,8 @@ async function flushOnce() {
       outboxPath: getLogPath(),
     });
 
+    // orgId is now resolved from the API key by the server, not sent in request body
     const body = {
-      orgId: cfg.orgId,
       records: batch.map(({ payload, leafHash }) => ({ payload, leafHash })),
     };
 
