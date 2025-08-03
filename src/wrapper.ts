@@ -16,22 +16,22 @@ function extractResponseContent(result: any): string {
   if (typeof result === "string") {
     return result;
   }
-  
+
   // OpenAI chat completion format
   if (result?.choices?.[0]?.message?.content) {
     return result.choices[0].message.content;
   }
-  
-  // Anthropic format  
+
+  // Anthropic format
   if (result?.content?.[0]?.text) {
     return result.content[0].text;
   }
-  
+
   // Generic content field
   if (result?.content && typeof result.content === "string") {
     return result.content;
   }
-  
+
   // Fallback to stringification only if no recognizable content structure
   return JSON.stringify(result);
 }
