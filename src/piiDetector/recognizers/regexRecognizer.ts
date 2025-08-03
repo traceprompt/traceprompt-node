@@ -172,7 +172,7 @@ export const regexRecognizer: Recognizer = {
       )
         continue;
       const pre = text
-        .slice(Math.max(0, m.index! - 10), m.index!)
+        .slice(Math.max(0, m.index! - 15), m.index!)
         .toLowerCase();
       if (
         /aba\s|acct\s|routing\s|checking\s|sin\s|ein\s|insee\s|dni\s|nhs\s|mbi\s|npi\s|svnr\s|ohip\s|medicare\s|mac\s|imei\s|member\s|plan\s|policy\s|insurance\s/.test(

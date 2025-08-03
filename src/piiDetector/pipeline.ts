@@ -4,12 +4,14 @@ import { regexRecognizer } from "./recognizers/regexRecognizer";
 import { nerRecognizer } from "./recognizers/nerRecognizer";
 import { idRecognizer } from "./recognizers/idRecognizer";
 import { nameRecognizer } from "./recognizers/nameRecognizer";
+import { compromiseRecognizer } from "./recognizers/compromiseRecognizer";
 
 const RECOGNIZERS = [
   regexRecognizer, // basic patterns including structured IDs with context guards
   idRecognizer, // national ID patterns with context + checksum validation
-  nameRecognizer, // capitalization-based name detection with context validation
-  nerRecognizer, // wink-nlp: PERSON + LOCATION (backup for names missed by pattern matching)
+  compromiseRecognizer, // compromise.js: context-aware name and business detection (primary)
+  nameRecognizer, // capitalization-based name detection with context validation (backup)
+  nerRecognizer, // wink-nlp: PERSON + LOCATION (backup for names missed by other methods)
 ];
 
 // Risk level mapping for PII types

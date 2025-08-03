@@ -1,8 +1,9 @@
 import { Recognizer, Entity } from "../../types";
 import winkNLP from "wink-nlp";
 import model from "wink-eng-lite-web-model";
-// @ts-ignore
+// @ts-ignore - wink-nlp internal module without types
 import its from "wink-nlp/src/its.js";
+import { isLikelyNotAName } from "./compromiseRecognizer";
 
 const nlp = winkNLP(model);
 
@@ -227,6 +228,140 @@ const COMMON_WORDS_RAW = [
   "appointment",
   "interview",
   "discussion",
+  // Additional words commonly flagged as false positives
+  "close",
+  "update",
+  "delete",
+  "create",
+  "remove",
+  "add",
+  "set",
+  "get",
+  "help",
+  "show",
+  "view",
+  "open",
+  "save",
+  "load",
+  "send",
+  "receive",
+  "submit",
+  "cancel",
+  "confirm",
+  "approve",
+  "reject",
+  "start",
+  "stop",
+  "pause",
+  "resume",
+  "finish",
+  "complete",
+  "begin",
+  "end",
+  "first",
+  "last",
+  "next",
+  "previous",
+  "new",
+  "old",
+  "current",
+  "active",
+  "inactive",
+  "enable",
+  "disable",
+  "activate",
+  "deactivate",
+  "strong",
+  "weak",
+  "authentication",
+  "authorization",
+  "security",
+  "privacy",
+  "policy",
+  "terms",
+  "conditions",
+  "agreement",
+  "contract",
+  "service",
+  "services",
+  "product",
+  "products",
+  "item",
+  "items",
+  // Acronyms commonly mistaken for names
+  "uk",
+  "us",
+  "eu",
+  "api",
+  "url",
+  "uri",
+  "sql",
+  "xml",
+  "json",
+  "csv",
+  "pdf",
+  "doc",
+  "docx",
+  "xls",
+  "xlsx",
+  "ppt",
+  "pptx",
+  "zip",
+  "rar",
+  "tar",
+  "gz",
+  "jpg",
+  "jpeg",
+  "png",
+  "gif",
+  "svg",
+  "mp3",
+  "mp4",
+  "avi",
+  "mov",
+  "wmv",
+  "flv",
+  "mkv",
+  "aml",
+  "foi",
+  "sar",
+  "gdpr",
+  "ccpa",
+  "hipaa",
+  "pci",
+  "dss",
+  "sox",
+  "iso",
+  "nist",
+  "otp",
+  "sms",
+  "mfa",
+  "2fa",
+  "pin",
+  "atm",
+  "pos",
+  "ach",
+  "wire",
+  "eft",
+  "swift",
+  "iban",
+  "bic",
+  "aba",
+  "routing",
+  "sort",
+  "code",
+  "account",
+  "balance",
+  "deposit",
+  "withdrawal",
+  "transfer",
+  "payment",
+  "transaction",
+  "fee",
+  "charge",
+  "refund",
+  "credit",
+  "debit",
 ];
 
 // Build optimized case-folded stop-list at module load time
@@ -347,6 +482,9 @@ export const nameRecognizer: Recognizer = {
       // Skip if any word is a common word
       if (words.some((word) => isCommonWord(word))) continue;
 
+      // Use compromise.js to check if this looks like a business name or non-person entity
+      if (isLikelyNotAName(fullName, text)) continue;
+
       // Check for name context or prefixes/suffixes
       const hasContext = hasNameContext(
         text,
@@ -386,6 +524,9 @@ export const nameRecognizer: Recognizer = {
           match.index! + word.length <= entity.end
       );
       if (alreadyCovered) continue;
+
+      // Use compromise.js to check if this is likely not a name (verb, adjective, etc.)
+      if (isLikelyNotAName(word, text)) continue;
 
       // Require strong context for single names
       if (hasNameContext(text, match.index!, match.index! + word.length)) {

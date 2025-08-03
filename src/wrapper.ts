@@ -11,6 +11,31 @@ import { registry } from "./metrics";
 import { Histogram } from "prom-client";
 import { analyzePiiInPromptResponse } from "./utils/piiDetector";
 
+// Helper function to extract actual content from LLM responses
+function extractResponseContent(result: any): string {
+  if (typeof result === "string") {
+    return result;
+  }
+  
+  // OpenAI chat completion format
+  if (result?.choices?.[0]?.message?.content) {
+    return result.choices[0].message.content;
+  }
+  
+  // Anthropic format  
+  if (result?.content?.[0]?.text) {
+    return result.content[0].text;
+  }
+  
+  // Generic content field
+  if (result?.content && typeof result.content === "string") {
+    return result.content;
+  }
+  
+  // Fallback to stringification only if no recognizable content structure
+  return JSON.stringify(result);
+}
+
 const wrapperLatencyHist = new Histogram({
   name: "traceprompt_llm_wrapper_latency_ms",
   help: "End‑to‑end latency from prompt send to response receive in the SDK wrapper (ms)",
@@ -53,8 +78,8 @@ export function wrapLLM<P extends Record<string, any>, R>(
 
     wrapperLatencyHist.observe(t1 - t0);
 
-    const responseText =
-      typeof result === "string" ? result : JSON.stringify(result);
+    // Extract actual content from LLM response instead of stringifying entire object
+    const responseText = extractResponseContent(result);
     const piiAnalysis = await analyzePiiInPromptResponse(prompt, responseText);
 
     const plaintextJson = JSON.stringify({

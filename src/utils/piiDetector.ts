@@ -1,4 +1,5 @@
 import { detectPII } from "../piiDetector/pipeline";
+import { detectPIIEnhanced } from "../piiDetector/enhancedPipeline";
 import { Entity, EntityType, RiskLevel } from "../types";
 
 // Re-export detectPII as detectPii for backward compatibility
@@ -21,7 +22,7 @@ interface FullPiiAnalysis {
 export type PiiDetectionResult = FullPiiAnalysis;
 
 function analyzeSingleText(text: string): PiiAnalysisResult {
-  const entities = detectPII(text);
+  const entities = detectPIIEnhanced(text);
 
   if (entities.length === 0) {
     return {
