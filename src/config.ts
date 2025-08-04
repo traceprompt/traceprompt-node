@@ -45,7 +45,7 @@ async function resolveOrgFromApiKey(
       );
     }
 
-    const result: WhoAmIResponse = await response.json();
+    const result = (await response.json()) as WhoAmIResponse;
 
     if (!result.success) {
       throw new Error("Failed to resolve organization from API key");
@@ -122,16 +122,10 @@ class ConfigManagerClass {
       }),
     };
 
-    // Determine default ingest URL based on NODE_ENV
-    const defaultIngestUrl =
-      process.env.NODE_ENV === "development"
-        ? "http://localhost:8080/v1/ingest" // Local dev server
-        : "https://api-staging.traceprompt.com/v1/ingest"; // Staging API
-
     const merged: TracePromptInit = {
       apiKey: "",
-      cmkArn: "",
-      ingestUrl: defaultIngestUrl,
+      ingestUrl: "https://api-staging.traceprompt.com/v1/ingest",
+      // ingestUrl: "http://localhost:8080/v1/ingest",
       batchSize: 25,
       flushIntervalMs: 2_000,
       staticMeta: {},

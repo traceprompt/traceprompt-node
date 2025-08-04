@@ -1,7 +1,6 @@
 export interface TracePromptInit {
   dataDir?: string;
   apiKey: string;
-  cmkArn?: string; // Optional - can be auto-resolved from API key
   ingestUrl: string;
   batchSize?: number;
   flushIntervalMs?: number;
