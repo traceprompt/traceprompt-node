@@ -3,9 +3,10 @@ import * as path from "node:path";
 import * as yaml from "yaml";
 import { TracePromptInit } from "./types";
 
-// Internal interface that includes the resolved orgId
 interface InternalTracePromptConfig extends TracePromptInit {
   orgId: string; // Always present after resolution
+  cmkArn: string; // KMS key ARN for encryption
+  hmacSecret: string; // HMAC secret for signing requests
 }
 
 interface WhoAmIResponse {
@@ -18,6 +19,68 @@ interface WhoAmIResponse {
     scope: string;
     keyId: string;
   };
+}
+
+interface HmacSecretResponse {
+  success: boolean;
+  data: {
+    hmacSecret: string;
+    keyId: string;
+  };
+}
+
+interface ErrorResponse {
+  error?: string;
+  message?: string;
+  reason?: string;
+  subscriptionStatus?: string;
+}
+
+/**
+ * Fetch HMAC secret from API key
+ */
+async function fetchHmacSecret(
+  apiKey: string,
+  ingestUrl: string
+): Promise<string> {
+  try {
+    const hmacUrl = `${ingestUrl.replace("/v1/ingest", "")}/v1/hmac-secret`;
+
+    const response = await fetch(hmacUrl, {
+      method: "GET",
+      headers: {
+        "x-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = `${response.status} ${response.statusText}`;
+
+      try {
+        const errorBody = (await response.json()) as ErrorResponse;
+        if (errorBody.message) {
+          errorMessage = errorBody.message;
+        } else if (errorBody.error) {
+          errorMessage = errorBody.error;
+        }
+      } catch {
+        // If we can't parse the error response, use the default message
+      }
+
+      throw new Error(`Failed to fetch HMAC secret: ${errorMessage}`);
+    }
+
+    const result = (await response.json()) as HmacSecretResponse;
+
+    if (!result.success || !result.data?.hmacSecret) {
+      throw new Error("Invalid HMAC secret response");
+    }
+
+    return result.data.hmacSecret;
+  } catch (error: any) {
+    throw new Error(`Failed to fetch HMAC secret: ${error.message}`);
+  }
 }
 
 /**
@@ -40,9 +103,20 @@ async function resolveOrgFromApiKey(
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to resolve organization: ${response.status} ${response.statusText}`
-      );
+      let errorMessage = `${response.status} ${response.statusText}`;
+
+      try {
+        const errorBody = (await response.json()) as ErrorResponse;
+        if (errorBody.message) {
+          errorMessage = errorBody.message;
+        } else if (errorBody.error) {
+          errorMessage = errorBody.error;
+        }
+      } catch {
+        // If we can't parse the error response, use the default message
+      }
+
+      throw new Error(`Failed to resolve organization: ${errorMessage}`);
     }
 
     const result = (await response.json()) as WhoAmIResponse;
@@ -125,11 +199,10 @@ class ConfigManagerClass {
     const merged: TracePromptInit = {
       apiKey: "",
       ingestUrl: "https://api-staging.traceprompt.com/v1/ingest",
-      // ingestUrl: "http://localhost:8080/v1/ingest",
       batchSize: 25,
       flushIntervalMs: 2_000,
       staticMeta: {},
-      logLevel: "verbose",
+      logLevel: "info", // Default to info level
       ...fileCfg,
       ...envCfg,
       ...userCfg,
@@ -138,9 +211,10 @@ class ConfigManagerClass {
     // Validate required fields
     if (!merged.apiKey) throw new Error("Traceprompt: apiKey is required");
 
-    // Auto-resolve orgId and cmkArn from API key
+    // Auto-resolve orgId, cmkArn, and HMAC secret from API key
     let orgId: string;
     let cmkArn: string;
+    let hmacSecret: string;
 
     try {
       const resolved = await resolveOrgFromApiKey(
@@ -149,9 +223,12 @@ class ConfigManagerClass {
       );
       orgId = resolved.orgId;
       cmkArn = resolved.cmkArn!;
+
+      // Fetch HMAC secret for signing requests
+      hmacSecret = await fetchHmacSecret(merged.apiKey, merged.ingestUrl);
     } catch (error) {
       throw new Error(
-        `Failed to auto-resolve organization: ${
+        `Failed to auto-resolve organization or HMAC secret: ${
           error instanceof Error ? error.message : String(error)
         }`
       );
@@ -161,11 +238,12 @@ class ConfigManagerClass {
     if (merged.batchSize! <= 0) merged.batchSize = 25;
     if (merged.flushIntervalMs! <= 0) merged.flushIntervalMs = 2_000;
 
-    // Create internal config with resolved orgId
+    // Create internal config with resolved orgId and HMAC secret
     this._cfg = {
       ...merged,
       orgId,
       cmkArn,
+      hmacSecret,
       apiKey: merged.apiKey,
       ingestUrl: merged.ingestUrl,
     } as Required<InternalTracePromptConfig>;

@@ -2,6 +2,7 @@ import { fetch } from "undici";
 import { ConfigManager } from "../config";
 import { retry } from "../utils/retry";
 import { log } from "../utils/logger";
+import { generateHmacSignature } from "../crypto/hmac";
 
 type HttpMethod = "POST" | "PUT" | "PATCH";
 
@@ -25,15 +26,29 @@ export const Transport = {
 };
 
 async function sendJson(opts: PostOptions): Promise<void> {
-  const { ingestUrl, apiKey } = ConfigManager.cfg;
+  const { ingestUrl, apiKey, hmacSecret } = ConfigManager.cfg;
   const url = new URL(opts.path, ingestUrl).toString();
   const extra = opts.headers ?? {};
+
+  // Add HMAC signature for ingest requests
+  let requestBody = opts.body;
+  if (opts.path === "/v1/ingest" && requestBody) {
+    // Sign only the records array, not the entire request body
+    const records = (requestBody as any).records;
+    const hmacSignature = generateHmacSignature(records, hmacSecret);
+
+    requestBody = {
+      ...requestBody,
+      hmacSignature,
+    };
+  }
 
   log.verbose(`Sending request to ${opts.path}`, {
     url: url,
     method: opts.method ?? "POST",
     retries: opts.retries ?? 5,
-    hasBody: !!opts.body,
+    hasBody: !!requestBody,
+    hasHmacSignature: opts.path === "/v1/ingest",
   });
 
   await retry(
@@ -46,7 +61,7 @@ async function sendJson(opts: PostOptions): Promise<void> {
           "x-api-key": apiKey,
           ...extra,
         },
-        body: JSON.stringify(opts.body),
+        body: JSON.stringify(requestBody),
       });
 
       if (res.status >= 400) {
