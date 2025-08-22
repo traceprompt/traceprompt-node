@@ -10,10 +10,9 @@ Two lines of code wrap your `openai`, `anthropic` or any LLM client to stream en
 ## Features
 
 - **Client-side AES-256-GCM encryption** with **customer-managed KMS keys** - Traceprompt never sees cleartext
-- **BLAKE3 hash chain with hourly Merkle root anchoring** to Bitcoin via OpenTimestamps
-- **Automatic token counting** and latency metrics
+- **BLAKE3 hash chain with Merkle root anchoring** to GitHub every 60 seconds
+- **Automatic token counting** and latency tracking
 - **Batched transport** with exponential backoff retry - under 2ms P95 overhead
-- **Prometheus metrics** included
 - Works on Node 18+ - Fargate, Vercel, Lambda, Kubernetes
 
 ---
@@ -83,23 +82,6 @@ console.log(response.choices[0].message.content);
 | `logLevel`   | SDK logging verbosity      | env `TRACEPROMPT_LOG_LEVEL`                          |
 
 **Note:** `orgId`, `cmkArn`, and `ingestUrl` are automatically resolved from your API key - no manual configuration needed.
-
----
-
-## Metrics
-
-| Metric                             | Type      | Description                    |
-| ---------------------------------- | --------- | ------------------------------ |
-| `traceprompt_prompts_total`        | Counter   | Total prompts processed        |
-| `traceprompt_encrypt_ms_p95`       | Histogram | Client-side encryption latency |
-| `traceprompt_flush_failures_total` | Counter   | Failed batch uploads           |
-
-Expose via:
-
-```ts
-import { registry } from "@traceprompt/node";
-app.get("/metrics", (_, res) => res.end(registry.metrics()));
-```
 
 ---
 

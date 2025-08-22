@@ -68,7 +68,7 @@ async function fetchHmacSecret(
         // If we can't parse the error response, use the default message
       }
 
-      throw new Error(`Failed to fetch HMAC secret: ${errorMessage}`);
+      throw new Error(errorMessage);
     }
 
     const result = (await response.json()) as HmacSecretResponse;
@@ -79,6 +79,13 @@ async function fetchHmacSecret(
 
     return result.data.hmacSecret;
   } catch (error: any) {
+    // If it's already a formatted error message, don't wrap it again
+    if (
+      error.message &&
+      !error.message.startsWith("Failed to fetch HMAC secret:")
+    ) {
+      throw error;
+    }
     throw new Error(`Failed to fetch HMAC secret: ${error.message}`);
   }
 }
@@ -132,10 +139,15 @@ async function resolveOrgFromApiKey(
 
     const cmkArn = result.data.kmsKeyArn;
 
-    console.log(`✓ Traceprompt auto-resolved organization: ${orgId}`);
-
     return { orgId, cmkArn };
   } catch (error) {
+    // If the error already has a descriptive message about organization resolution, pass it through
+    if (
+      error instanceof Error &&
+      error.message.includes("Failed to resolve organization")
+    ) {
+      throw error;
+    }
     throw new Error(
       `Failed to auto-resolve organization from API key: ${
         error instanceof Error ? error.message : String(error)
@@ -198,11 +210,12 @@ class ConfigManagerClass {
 
     const merged: TracePromptInit = {
       apiKey: "",
-      ingestUrl: "https://api-staging.traceprompt.com/v1/ingest",
+      ingestUrl: "https://api.traceprompt.com/v1/ingest",
+      // ingestUrl: "https://api-staging.traceprompt.com/v1/ingest",
       batchSize: 25,
       flushIntervalMs: 2_000,
       staticMeta: {},
-      logLevel: "info", // Default to info level
+      logLevel: "info",
       ...fileCfg,
       ...envCfg,
       ...userCfg,
@@ -223,15 +236,27 @@ class ConfigManagerClass {
       );
       orgId = resolved.orgId;
       cmkArn = resolved.cmkArn!;
-
-      // Fetch HMAC secret for signing requests
-      hmacSecret = await fetchHmacSecret(merged.apiKey, merged.ingestUrl);
     } catch (error) {
+      // If the error is already about organization resolution, pass it through to avoid repetition
+      if (
+        error instanceof Error &&
+        error.message.includes("Failed to resolve organization")
+      ) {
+        throw error;
+      }
       throw new Error(
-        `Failed to auto-resolve organization or HMAC secret: ${
+        `Failed to resolve organization: ${
           error instanceof Error ? error.message : String(error)
         }`
       );
+    }
+
+    try {
+      // Fetch HMAC secret for signing requests
+      hmacSecret = await fetchHmacSecret(merged.apiKey, merged.ingestUrl);
+    } catch (error) {
+      // Pass through the original error message without wrapping
+      throw error;
     }
 
     // Final validation
