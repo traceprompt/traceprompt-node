@@ -197,12 +197,6 @@ class ConfigManagerClass {
       ...(process.env["TRACEPROMPT_INGEST_URL"] && {
         ingestUrl: process.env["TRACEPROMPT_INGEST_URL"],
       }),
-      ...(process.env["TRACEPROMPT_BATCH_SIZE"] && {
-        batchSize: Number(process.env["TRACEPROMPT_BATCH_SIZE"]),
-      }),
-      ...(process.env["TRACEPROMPT_FLUSH_INTERVAL_MS"] && {
-        flushIntervalMs: Number(process.env["TRACEPROMPT_FLUSH_INTERVAL_MS"]),
-      }),
       ...(process.env["TRACEPROMPT_LOG_LEVEL"] && {
         logLevel: process.env["TRACEPROMPT_LOG_LEVEL"] as any,
       }),

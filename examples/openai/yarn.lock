@@ -2219,6 +2219,11 @@ diff@^4.0.1:
   resolved "https://registry.yarnpkg.com/diff/-/diff-4.0.2.tgz#60f3aecb89d5fae520c11aa19efc2bb982aade7d"
   integrity sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==
 
+dotenv@^17.2.1:
+  version "17.2.1"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-17.2.1.tgz#6f32e10faf014883515538dc922a0fb8765d9b32"
+  integrity sha512-kQhDYKZecqnM0fCnzI5eIv5L4cAe/iRI+HqMbO/hbRdTAeXDG+M9FjipUxNfbARuEg4iHIbhnhs78BCHNbSxEQ==
+
 dunder-proto@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/dunder-proto/-/dunder-proto-1.0.1.tgz#d7ae667e1dc83482f8b70fd0f6eefc50da30f58a"
@@ -3154,10 +3159,10 @@ tr46@^1.0.1:
   dependencies:
     punycode "^2.1.0"
 
-traceprompt-node@^1.2.3:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/traceprompt-node/-/traceprompt-node-1.2.3.tgz#7198703281184e26db57875d0a487f76f62bd382"
-  integrity sha512-7xGCcw7N9XgJSSUA5lFCIpMv3EcsxO+8QgBzjBm4J739JaN+EGLtZ+2bg6nxeTw0DZH8rWwPVZblxkLBswumJw==
+traceprompt-node@^1.2.4:
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/traceprompt-node/-/traceprompt-node-1.2.4.tgz#76cc0c547dad106afa0109eb08656e9e0fb4ed0a"
+  integrity sha512-h/czqpl65nrNf9zbdHiuKtjy7yvufArtfrQ3A17EDZfmxWirCSnrFPusDv6Cf0PCqUSwfTydewpGJhMGVEbNeg==
   dependencies:
     "@aws-crypto/client-node" "4.2.1"
     "@aws-sdk/client-kms" "3.812.0"

@@ -1,5 +1,8 @@
+import { config } from "dotenv";
 import { init, wrap } from "traceprompt-node";
 import OpenAI from "openai";
+
+config();
 
 async function main() {
   try {

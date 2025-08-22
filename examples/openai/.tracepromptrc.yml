@@ -1,8 +1,8 @@
 apiKey: tp_live_3abc-123-456-789-012
 
-logLevel: "info"
+logLevel: info
 
 staticMeta:
-  env: "production"
-  app: "traceprompt-test-suite"
-  version: "0.1.0"
+  env: development
+  app: hello-world
+  version: 0.1.0
