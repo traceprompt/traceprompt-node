@@ -1,4 +1,4 @@
-![Traceprompt Logo](branding/logo.png)
+![Traceprompt Logo](./branding/logo.png)
 
 # Traceprompt SDK for Node.js
 
@@ -20,13 +20,18 @@ Two lines of code wrap your `openai`, `anthropic` or any LLM client to stream en
 ## Quick start
 
 ```bash
-npm i @traceprompt/node
-# or yarn add @traceprompt/node
+# NPM
+npm install @traceprompt/node dotenv
+
+# Yarn
+yarn add @traceprompt/node dotenv
 ```
 
 **1. Configure your API key**
 
-Create a `traceprompt.yml` file:
+**Option A: Using a config file (recommended)**
+
+Create a `.tracepromptrc.yml` file:
 
 ```yaml
 apiKey: tp_live_xxxxx
@@ -37,18 +42,28 @@ staticMeta:
   env: "prod"
 ```
 
-Or use environment variables:
+Create a `.env` file to point to your config:
+
+```bash
+TRACEPROMPT_RC=".tracepromptrc.yml"
+```
+
+**Option B: Using environment variables only**
 
 ```bash
 export TRACEPROMPT_API_KEY=tp_live_xxxxx
-export TRACEPROMPT_LOG_LEVEL=verbose
+export TRACEPROMPT_LOG_LEVEL=info
 ```
 
 **2. Wrap your LLM calls**
 
 ```typescript
+import { config } from "dotenv";
 import { init, wrap } from "@traceprompt/node";
 import OpenAI from "openai";
+
+// Load environment variables (if using .env file)
+config();
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -75,11 +90,33 @@ console.log(response.choices[0].message.content);
 
 ## Configuration
 
-| Key          | Description                | Source (priority)                                    |
-| ------------ | -------------------------- | ---------------------------------------------------- |
-| `apiKey`     | Your TracePrompt API key   | code → env `TRACEPROMPT_API_KEY` → `traceprompt.yml` |
-| `staticMeta` | Metadata added to all logs | code → `traceprompt.yml` only                        |
-| `logLevel`   | SDK logging verbosity      | env `TRACEPROMPT_LOG_LEVEL`                          |
+### Configuration Loading Order (highest to lowest priority):
+
+1. **Code parameters** passed to `init({})`
+2. **Environment variables** (`TRACEPROMPT_API_KEY`, etc.)
+3. **Config file** specified by `TRACEPROMPT_RC` environment variable
+4. **Default config files** (`.tracepromptrc.yml`, `.tracepromptrc.yaml`, `traceprompt.yml`, `traceprompt.yaml`)
+
+### Configuration Options
+
+| Key          | Description                | Environment Variable     | Config File |
+| ------------ | -------------------------- | ------------------------ | ----------- |
+| `apiKey`     | Your TracePrompt API key   | `TRACEPROMPT_API_KEY`    | ✅          |
+| `staticMeta` | Metadata added to all logs | ❌                       | ✅          |
+| `logLevel`   | SDK logging verbosity      | `TRACEPROMPT_LOG_LEVEL`  | ✅          |
+| `ingestUrl`  | API endpoint (optional)    | `TRACEPROMPT_INGEST_URL` | ✅          |
+
+### Config File Location
+
+Set the config file path using the `TRACEPROMPT_RC` environment variable:
+
+```bash
+# In .env file
+TRACEPROMPT_RC=".tracepromptrc.yml"
+
+# Or as environment variable
+export TRACEPROMPT_RC="/path/to/your/config.yml"
+```
 
 **Note:** `orgId`, `cmkArn`, and `ingestUrl` are automatically resolved from your API key - no manual configuration needed.
 
