@@ -47,14 +47,14 @@ export TRACEPROMPT_LOG_LEVEL=verbose
 **2. Wrap your LLM calls**
 
 ```typescript
-import { initTracePrompt, wrapLLM } from "@traceprompt/node";
+import { init, wrap } from "@traceprompt/node";
 import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-await initTracePrompt(); // Auto-resolves orgId and cmkArn from API key
+await init(); // Auto-resolves orgId and cmkArn from API key
 
-const trackedChat = wrapLLM(
+const trackedChat = wrap(
   (prompt) =>
     openai.chat.completions.create({
       messages: [{ role: "user", content: prompt }],

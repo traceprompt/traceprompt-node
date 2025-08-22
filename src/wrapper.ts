@@ -59,13 +59,11 @@ function mapRiskLevelToApiEnum(
   }
 }
 
-export async function initTracePrompt(
-  cfg?: Partial<TracePromptInit>
-): Promise<void> {
+export async function init(cfg?: Partial<TracePromptInit>): Promise<void> {
   await initCfgAsync(cfg);
 }
 
-export function wrapLLM<P extends Record<string, any>, R>(
+export function wrap<P extends Record<string, any>, R>(
   originalFn: (prompt: string, params?: P) => Promise<R>,
   meta: WrapOpts
 ): (prompt: string, params?: P) => Promise<R> {

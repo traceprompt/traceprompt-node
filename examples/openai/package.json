@@ -1,0 +1,22 @@
+{
+  "name": "traceprompt-node-openai-example",
+  "version": "1.0.0",
+  "description": "Example of integrating Traceprompt with OpenAI",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "ts-node --project tsconfig.json src/index.ts",
+    "build": "tsc",
+    "start:prod": "node dist/index.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "openai": "^5.15.0",
+    "traceprompt-node": "^1.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT"
+}
