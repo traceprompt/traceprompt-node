@@ -3159,10 +3159,10 @@ tr46@^1.0.1:
   dependencies:
     punycode "^2.1.0"
 
-traceprompt-node@^1.2.4:
-  version "1.2.4"
-  resolved "https://registry.yarnpkg.com/traceprompt-node/-/traceprompt-node-1.2.4.tgz#76cc0c547dad106afa0109eb08656e9e0fb4ed0a"
-  integrity sha512-h/czqpl65nrNf9zbdHiuKtjy7yvufArtfrQ3A17EDZfmxWirCSnrFPusDv6Cf0PCqUSwfTydewpGJhMGVEbNeg==
+traceprompt-node@^1.2.5:
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/traceprompt-node/-/traceprompt-node-1.2.5.tgz#6207cf471012a8c0bc8edce4fa7f963797ed4318"
+  integrity sha512-e1/hSvAA0aGF1WwcvcaMM/jnvNDCPqgR3dfl5Esn7r+VMgYJUgtiws+5bFttz9fg9GvaiwYz5na5LbDbFnVmaA==
   dependencies:
     "@aws-crypto/client-node" "4.2.1"
     "@aws-sdk/client-kms" "3.812.0"
