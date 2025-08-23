@@ -3,7 +3,7 @@
 # Traceprompt SDK for Node.js
 
 **Audit-ready, tamper-evident logging for every LLM prompt and response.**  
-Two lines of code wrap your `openai`, `anthropic` or any LLM client to stream encrypted, hash-chained events to an immutable ledger. Ready for FINRA, HIPAA, and EU AI Act compliance audits.
+Simple drop-in wrapper for your `openai`, `anthropic` or any LLM client to stream encrypted, hash-chained events to an immutable ledger. Ready for FINRA, HIPAA, and EU AI Act compliance audits.
 
 ---
 
@@ -21,10 +21,10 @@ Two lines of code wrap your `openai`, `anthropic` or any LLM client to stream en
 
 ```bash
 # NPM
-npm install @traceprompt/node dotenv
+npm install @traceprompt-node dotenv
 
 # Yarn
-yarn add @traceprompt/node dotenv
+yarn add @traceprompt-node dotenv
 ```
 
 **1. Configure your API key**
