@@ -1,4 +1,4 @@
-![Traceprompt Logo](./branding/logo.png)
+![Traceprompt Banner](https://www.traceprompt.com/Banner.png)
 
 # Traceprompt SDK for Node.js
 
