@@ -1,9 +1,9 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as yaml from "yaml";
-import { TracePromptInit } from "./types";
+import { TracepromptInit } from "./types";
 
-interface InternalTracePromptConfig extends TracePromptInit {
+interface InternalTracePromptConfig extends TracepromptInit {
   orgId: string; // Always present after resolution
   cmkArn: string; // KMS key ARN for encryption
   hmacSecret: string; // HMAC secret for signing requests
@@ -156,7 +156,7 @@ async function resolveOrgFromApiKey(
   }
 }
 
-function readYaml(filePath: string): Partial<TracePromptInit> {
+function readYaml(filePath: string): Partial<TracepromptInit> {
   try {
     const abs = path.resolve(process.cwd(), filePath);
 
@@ -172,7 +172,7 @@ class ConfigManagerClass {
   private _cfg?: Required<InternalTracePromptConfig>;
   private _loadPromise?: Promise<void>;
 
-  async load(userCfg: Partial<TracePromptInit> = {}): Promise<void> {
+  async load(userCfg: Partial<TracepromptInit> = {}): Promise<void> {
     if (this._cfg) return;
 
     // Prevent multiple concurrent loads
@@ -185,12 +185,12 @@ class ConfigManagerClass {
     await this._loadPromise;
   }
 
-  private async _doLoad(userCfg: Partial<TracePromptInit> = {}): Promise<void> {
+  private async _doLoad(userCfg: Partial<TracepromptInit> = {}): Promise<void> {
     const fileCfg = process.env["TRACEPROMPT_RC"]
       ? readYaml(process.env["TRACEPROMPT_RC"])
       : {};
 
-    const envCfg: Partial<TracePromptInit> = {
+    const envCfg: Partial<TracepromptInit> = {
       ...(process.env["TRACEPROMPT_API_KEY"] && {
         apiKey: process.env["TRACEPROMPT_API_KEY"],
       }),
@@ -200,15 +200,44 @@ class ConfigManagerClass {
       ...(process.env["TRACEPROMPT_LOG_LEVEL"] && {
         logLevel: process.env["TRACEPROMPT_LOG_LEVEL"] as any,
       }),
+      // Agent configuration from environment variables
+      ...((process.env["TRACEPROMPT_AGENT_NAME"] ||
+        process.env["TRACEPROMPT_AGENT_ID"] ||
+        process.env["TRACEPROMPT_AGENT_VERSION"] ||
+        process.env["TRACEPROMPT_AGENT_KIND"] ||
+        process.env["TRACEPROMPT_POLICY_PROFILE"]) && {
+        agent: {
+          ...(process.env["TRACEPROMPT_AGENT_NAME"] && {
+            name: process.env["TRACEPROMPT_AGENT_NAME"],
+          }),
+          ...(process.env["TRACEPROMPT_AGENT_ID"] && {
+            id: process.env["TRACEPROMPT_AGENT_ID"],
+          }),
+          ...(process.env["TRACEPROMPT_AGENT_VERSION"] && {
+            version: process.env["TRACEPROMPT_AGENT_VERSION"],
+          }),
+          ...(process.env["TRACEPROMPT_AGENT_KIND"] && {
+            kind: process.env["TRACEPROMPT_AGENT_KIND"],
+          }),
+          ...(process.env["TRACEPROMPT_POLICY_PROFILE"] && {
+            policy_profile: process.env["TRACEPROMPT_POLICY_PROFILE"],
+          }),
+        },
+      }),
     };
 
-    const merged: TracePromptInit = {
+    const merged: TracepromptInit = {
       apiKey: "",
       ingestUrl: "https://api.traceprompt.com/v1/ingest",
-      // ingestUrl: "https://api-staging.traceprompt.com/v1/ingest",
       batchSize: 25,
       flushIntervalMs: 2_000,
       staticMeta: {},
+      agent: {
+        name: "default_agent",
+        version: "1.0.0",
+        kind: "custom",
+        policy_profile: "default",
+      },
       logLevel: "info",
       ...fileCfg,
       ...envCfg,
@@ -277,7 +306,7 @@ class ConfigManagerClass {
 }
 
 export async function initTracePrompt(
-  cfg?: Partial<TracePromptInit>
+  cfg?: Partial<TracepromptInit>
 ): Promise<void> {
   await ConfigManager.load(cfg);
 }

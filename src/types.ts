@@ -1,15 +1,24 @@
-export interface TracePromptInit {
+export interface AgentDefaults {
+  name?: string;
+  id?: string; // Stable UUID across deployments
+  version?: string;
+  kind?: string;
+  policy_profile?: string;
+}
+
+export interface TracepromptInit {
   dataDir?: string;
   apiKey: string;
   ingestUrl: string;
   batchSize?: number;
   flushIntervalMs?: number;
   staticMeta?: Record<string, unknown>;
+  agent?: AgentDefaults; // Agent identity defaults
   logLevel?: "error" | "warn" | "info" | "verbose" | "debug" | "silly";
 }
 
 export interface WrapOpts {
-  modelVendor:
+  modelVendor?:
     | "openai"
     | "anthropic"
     | "grok"
@@ -17,9 +26,25 @@ export interface WrapOpts {
     | "mistral"
     | "deepseek"
     | "xai"
-    | "local";
-  modelName: string;
+    | "local"; // Optional for non-LLM spans
+  modelName?: string; // Optional for non-LLM spans
   userId?: string;
+  spanKind?: SpanKind; // NEW: defaults to "ModelCall"
+
+  // Tool-specific metadata
+  toolName?: string; // For ToolCall/ToolResult spans
+  toolVersion?: string;
+
+  // Agent-specific metadata
+  agentName?: string; // For AgentRun spans
+  agentVersion?: string; // Agent version for AgentRun spans
+  agentKind?: string; // Agent type (e.g., "custom", "openai-assistant")
+  policyProfile?: string; // Policy profile for compliance
+  stepIndex?: number; // For AgentStep spans
+
+  // Trace correlation
+  traceId?: string; // NEW: for linking spans
+  parentSpanId?: string; // NEW: for span hierarchy
 }
 
 export interface EncryptedBundle {
@@ -33,62 +58,21 @@ export interface QueueItem {
   leafHash: string;
 }
 
-export type EntityType =
-  | "FULL_NAME"
-  | "FIRST_NAME"
-  | "EMAIL"
-  | "PHONE"
-  | "CREDIT_CARD"
-  | "CREDIT_CARD_PARTIAL"
-  | "SSN"
-  | "PASSPORT"
-  | "ADDRESS"
-  | "POSTCODE"
-  | "IP"
-  | "IBAN"
-  | "SWIFT_BIC"
-  | "NINO"
-  | "UK_BANK_ACCT"
-  | "US_ROUTING"
-  | "INSURANCE_ID"
-  | "MEDICAL_ID"
-  | "NHS_NUMBER"
-  | "DOB"
-  | "DRIVER_LICENSE"
-  | "DNI"
-  | "INSEE_SSN"
-  | "EIN"
-  | "EU_NATIONAL_ID"
-  | "UK_DL"
-  | "ON_DL"
-  | "PERSONNUMMER"
-  | "CA_SIN"
-  | "NHS_NUMBER"
-  | "MBI"
-  | "NPI"
-  | "ON_HEALTH"
-  | "SVNR"
-  | "MAC_ADDRESS"
-  | "IMEI"
-  | "BANK_ACCOUNT";
+// New span types for agent and tool call tracing
+export type SpanKind =
+  | "ModelCall" // LLM API call
+  | "AgentRun" // Top-level agent session (root span)
+  | "AgentStep" // Single reasoning iteration
+  | "ToolCall" // Tool invocation (input)
+  | "ToolResult" // Tool response (output + status)
+  | "Retrieval" // RAG/search operation
+  | "PolicyCheck" // Compliance validation
+  | "HumanFeedback"; // Manual approvals/escalations
 
-export type RiskLevel = "critical" | "sensitive" | "general";
-
-export interface Entity {
-  type: EntityType;
-  start: number;
-  end: number;
-  text: string;
-  confidence: number;
-  source: string;
-  risk: RiskLevel;
-}
-
-export interface OffsetMap {
-  origPos(n: number): number;
-}
-
-export interface Recognizer {
-  id: string;
-  detect(text: string, map: OffsetMap): Entity[];
+// Span context for trace propagation
+export interface SpanContext {
+  traceId: string;
+  spanId: string;
+  parentSpanId?: string;
+  eventIndex?: number; // Monotonic counter per trace
 }

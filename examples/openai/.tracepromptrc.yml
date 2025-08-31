@@ -1,4 +1,5 @@
-apiKey: tp_live_3abc-123-456-789-012
+apiKey: ${TRACEPROMPT_API_KEY}
+ingestUrl: "https://api.traceprompt.com/v1/ingest"
 
 logLevel: info
 
@@ -6,3 +7,10 @@ staticMeta:
   env: development
   app: hello-world
   version: 0.1.0
+
+agent:
+  name: customer_service_v1
+  id: a7c9f7c4-3d8e-4b2f-9a1e-5c8d9f0b1e0c
+  version: 1.2.3
+  kind: customer-service
+  policy_profile: production/customer-facing

@@ -11,13 +11,13 @@ const { encrypt, decrypt } = buildClient(
 );
 
 export async function encryptBuffer(plain: Buffer): Promise<EncryptedBundle> {
-  const keyring = buildKeyring();
   const endTimer = encryptHist.startTimer();
   try {
     log.info("Encrypting buffer", {
       orgId: ConfigManager.cfg.orgId,
     });
 
+    const keyring = buildKeyring();
     const { result, messageHeader } = await encrypt(keyring, plain, {
       encryptionContext: {
         org_id: ConfigManager.cfg.orgId,
